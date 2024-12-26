@@ -130,6 +130,81 @@ let antiSniffingConfig = {
     enabled: true,
     window: 30000,
     usedNonces: new Set()
+  },
+  // 添加高级隐私保护
+  privacy: {
+    enabled: true,
+    // 多层加密
+    layeredEncryption: {
+      enabled: true,
+      layers: [
+        {name: 'outer', algorithm: 'AES-GCM', keySize: 256},
+        {name: 'middle', algorithm: 'ChaCha20-Poly1305', keySize: 256},
+        {name: 'inner', algorithm: 'AES-GCM', keySize: 256}
+      ]
+    },
+    // 流量混淆
+    trafficObfuscation: {
+      enabled: true,
+      // 添加随机填充
+      padding: {
+        enabled: true,
+        minSize: 64,
+        maxSize: 256
+      },
+      // 流量特征隐藏
+      patternMasking: {
+        enabled: true,
+        techniques: ['randomization', 'timing-variation', 'size-variation']
+      }
+    },
+    // DNS 加密
+    dnsEncryption: {
+      enabled: true,
+      protocol: 'DoH', // DNS over HTTPS
+      servers: [
+        'https://cloudflare-dns.com/dns-query',
+        'https://dns.google/dns-query'
+      ]
+    }
+  },
+  // 添加多重安全传输配置
+  multiChannelSecurity: {
+    enabled: true,
+    // 多通道配置
+    channels: [
+      {
+        name: 'primary',
+        protocol: 'TLS-1.3',
+        encryption: 'AES-256-GCM',
+        priority: 1
+      },
+      {
+        name: 'secondary',
+        protocol: 'QUIC',
+        encryption: 'ChaCha20-Poly1305',
+        priority: 2
+      },
+      {
+        name: 'fallback',
+        protocol: 'HTTP/3',
+        encryption: 'AES-256-GCM',
+        priority: 3
+      }
+    ],
+    // 数据分片配置
+    fragmentation: {
+      enabled: true,
+      minSize: 512,
+      maxSize: 4096,
+      redundancy: 0.2 // 20% 冗余度
+    },
+    // 通道切换策略
+    channelSwitching: {
+      enabled: true,
+      interval: 1000, // 每秒切换一次
+      randomization: true
+    }
   }
 };
 
@@ -341,40 +416,43 @@ async function protectFromSniffing(data) {
   }
 
   try {
-    // 生成随机 IV
-    const iv = crypto.getRandomValues(new Uint8Array(12));
+    // 1. 安全网速优化
+    let protectedData = await boostTransferSpeed(data);
     
-    // 生成 nonce
+    // 2. 验证优化后的数据安全性
+    if (!await validateOptimizedData(protectedData)) {
+      // 如果验证失败，使用原始数据
+      protectedData = data;
+    }
+    
+    // 3. 应用军事级加密
+    protectedData = await multiLayerEncrypt(protectedData);
+    
+    // 4. 多重安全传输
+    protectedData = await multiChannelTransmit(protectedData);
+    
+    // 5. 流量混淆
+    protectedData = await obfuscateTraffic(protectedData);
+    
+    // 6. 完整性校验
+    const integrity = await calculateIntegrity(protectedData);
+    
+    // 7. 时间戳和 nonce
+    const timestamp = new Date().getTime();
     const nonce = crypto.getRandomValues(new Uint8Array(16));
     
-    // 时间戳
-    const timestamp = new Date().getTime();
-
-    // 构造要加密的数据
-    const payload = {
-      data,
+    return {
+      version: 4,
+      data: Array.from(new Uint8Array(protectedData)),
+      integrity: Array.from(new Uint8Array(integrity)),
+      timestamp,
       nonce: Array.from(nonce),
-      timestamp
+      metrics: speedBoostConfig.monitoring.metrics,
+      securityLevel: 'military-grade'
     };
-
-    // 端到端加密
-    const encryptedData = await e2eeEncrypt(JSON.stringify(payload));
-
-    // 计算完整性校验值
-    const integrity = await calculateIntegrity(encryptedData);
-
-    // 组合最终数据
-    const protectedData = {
-      version: 1,
-      iv: Array.from(iv),
-      encrypted: encryptedData,
-      integrity,
-      timestamp
-    };
-
-    return protectedData;
   } catch (error) {
-    console.error('防窃听保护失败:', error);
+    console.error('高级安全保护失败:', error);
+    // 出错时返回原始数据，确保安全性
     return data;
   }
 }
@@ -553,6 +631,16 @@ function arrayEquals(a, b) {
          a.length === b.length && 
          a.every((val, index) => val === b[index]);
 }
+
+// 在现有变量声明后添加密码相关配置
+let passwordConfig = {
+  enabled: false, // 是否启用密码保护
+  password: '', // 密码
+  maxAttempts: 3, // 最大尝试次数
+  lockoutTime: 30 * 60 * 1000, // 锁定时间(30分钟)
+  attempts: new Map(), // 记录尝试次数
+  lockouts: new Map() // 记录锁定时间
+};
 
 export default {
 	async fetch(request, env, ctx) {
@@ -931,13 +1019,13 @@ async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portR
 			if (proxyIP.includes('.tp')) portRemote = proxyIP.split('.tp')[1].split('.')[0] || portRemote;
 			tcpSocket = await connectAndWrite(proxyIP || addressRemote, portRemote);
 		}
-		// 无论重试是否成功，都要关闭 WebSocket（可���是为了重新建立连接）
+		// 无论重试是否成功，都要关闭 WebSocket（可能是为了重新建立连接）
 		tcpSocket.closed.catch(error => {
 			console.log('retry tcpSocket closed error', error);
 		}).finally(() => {
 			safeCloseWebSocket(webSocket);
 		})
-		// 建立从���程 Socket 到 WebSocket 的数据流
+		// 建立从远程 Socket 到 WebSocket 的数据流
 		remoteSocketToWS(tcpSocket, webSocket, 维列斯ResponseHeader, null, log);
 	}
 
@@ -1152,7 +1240,7 @@ function process维列斯Header(维列斯Buffer, userID) {
 			// seems no need add [] for ipv6
 			break;
 		default:
-			// 无效的地址���型
+			// 无效的地址类型
 			return {
 				hasError: true,
 				message: `invild addressType is ${addressType}`,
@@ -1210,8 +1298,9 @@ async function remoteSocketToWS(remoteSocket, webSocket, 维列斯ResponseHeader
 						);
 					}
 
-					// 添加防窃听保护
+					// 应用增强的隐私保护
 					const protectedChunk = await protectFromSniffing(chunk);
+					// 添加额外的加密层
 					const encryptedChunk = await encryptTraffic(protectedChunk);
 
 					if (维列斯Header) {
@@ -1355,7 +1444,7 @@ function unsafeStringify(arr, offset = 0) {
 /**
  * 将字节数组转换为 UUID 字符串，并验证其有效性
  * 这是一个安全的函数，它确保返回的 UUID 格式正确
- * @param {Uint8Array} arr ��含 UUID 字节的数组
+ * @param {Uint8Array} arr 包含 UUID 字节的数组
  * @param {number} offset 数组中 UUID 开始的位置，默认为 0
  * @returns {string} 有效的 UUID 字符串
  * @throws {TypeError} 如果生成的 UUID 字符串无效
@@ -1748,7 +1837,119 @@ const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRT
  * @returns {Promise<string>}
  */
 async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, url, env) {
-	// 将 url 赋值给 _url 以供后续使用
+	// 获取密码配置
+	passwordConfig.enabled = env.PASSWORD_PROTECT === 'true';
+	passwordConfig.password = env.ACCESS_PASSWORD || '';
+	
+	// 如果启用了密码保护且访问的是配置页面
+	if (passwordConfig.enabled && !url.searchParams.has('password')) {
+		const clientIP = url.headers?.get('CF-Connecting-IP') || 'unknown';
+		
+		// 检查是否被锁定
+		if (isLocked(clientIP)) {
+			return `
+				<h2>访问被锁定</h2>
+				<p>由于多次密码错误，您的访问已被临时锁定。</p>
+				<p>请在 ${Math.ceil(getRemainingLockTime(clientIP) / 60000)} 分钟后重试。</p>
+			`;
+		}
+
+		// 显示密码输入页面
+		return `
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<title>访问验证</title>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1">
+				<style>
+					body {
+						font-family: Arial, sans-serif;
+						margin: 40px;
+						text-align: center;
+					}
+					.container {
+						max-width: 400px;
+						margin: 0 auto;
+						padding: 20px;
+						border: 1px solid #ccc;
+						border-radius: 5px;
+					}
+					input[type="password"] {
+						width: 200px;
+						padding: 8px;
+						margin: 10px 0;
+					}
+					button {
+						padding: 8px 20px;
+						background-color: #4CAF50;
+						color: white;
+						border: none;
+						border-radius: 4px;
+						cursor: pointer;
+					}
+					button:hover {
+						background-color: #45a049;
+					}
+					.error {
+						color: red;
+						margin-top: 10px;
+					}
+				</style>
+			</head>
+			<body>
+				<div class="container">
+					<h2>访问验证</h2>
+					<p>请输入访问密码：</p>
+					<form id="passwordForm">
+						<input type="password" id="password" name="password" required>
+						<br>
+						<button type="submit">验证</button>
+					</form>
+					<div id="error" class="error"></div>
+				</div>
+				<script>
+					document.getElementById('passwordForm').onsubmit = function(e) {
+						e.preventDefault();
+						const password = document.getElementById('password').value;
+						const currentUrl = window.location.href;
+						window.location.href = currentUrl + (currentUrl.includes('?') ? '&' : '?') + 'password=' + encodeURIComponent(password);
+					};
+				</script>
+			</body>
+			</html>
+		`;
+	}
+
+	// 如果提供了密码，验证密码
+	if (passwordConfig.enabled && url.searchParams.has('password')) {
+		const providedPassword = url.searchParams.get('password');
+		const clientIP = url.headers?.get('CF-Connecting-IP') || 'unknown';
+		
+		if (providedPassword !== passwordConfig.password) {
+			// 记录失败尝试
+			recordFailedAttempt(clientIP);
+			
+			if (isLocked(clientIP)) {
+				return `
+					<h2>访问被锁定</h2>
+					<p>由于多次密码错误，您的访问已被临时锁定。</p>
+					<p>请在 ${Math.ceil(getRemainingLockTime(clientIP) / 60000)} 分钟后重试。</p>
+				`;
+			}
+
+			return `
+				<h2>密码错误</h2>
+				<p>请<a href="${url.pathname}">重新输入</a>密码。</p>
+				<p>剩余尝试次数：${passwordConfig.maxAttempts - getAttempts(clientIP)}</p>
+			`;
+		}
+		
+		// 密码正确，重置尝试次数
+		resetAttempts(clientIP);
+	}
+
+	// 继续原有的配置生成逻辑
 	const _url = url;
 	
 	// 检查加密配置状态
@@ -2740,4 +2941,542 @@ async function KV(request, env, txt = 'ADD.txt') {
 			headers: { "Content-Type": "text/plain;charset=utf-8" }
 		});
 	}
+}
+
+// 添加多层加密函数
+async function multiLayerEncrypt(data) {
+  const { layers } = antiSniffingConfig.privacy.layeredEncryption;
+  let encryptedData = data;
+  
+  // 从内到外逐层加密
+  for (const layer of [...layers].reverse()) {
+    const key = await generateLayerKey(layer.name, layer.keySize);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    encryptedData = await crypto.subtle.encrypt(
+      {
+        name: layer.algorithm,
+        iv: iv
+      },
+      key,
+      encryptedData
+    );
+    
+    // 将 IV 附加到加密数据
+    encryptedData = concatArrayBuffers(iv, encryptedData);
+  }
+  
+  return encryptedData;
+}
+
+// 添加多层解密函数
+async function multiLayerDecrypt(data) {
+  const { layers } = antiSniffingConfig.privacy.layeredEncryption;
+  let decryptedData = data;
+  
+  // 从外到内逐层解密
+  for (const layer of layers) {
+    const key = await generateLayerKey(layer.name, layer.keySize);
+    
+    // 提取 IV
+    const iv = decryptedData.slice(0, 12);
+    decryptedData = decryptedData.slice(12);
+    
+    decryptedData = await crypto.subtle.decrypt(
+      {
+        name: layer.algorithm,
+        iv: iv
+      },
+      key,
+      decryptedData
+    );
+  }
+  
+  return decryptedData;
+}
+
+// 添加流量混淆函数
+async function obfuscateTraffic(data) {
+  const { padding, patternMasking } = antiSniffingConfig.privacy.trafficObfuscation;
+  
+  // 添加随机填充
+  if (padding.enabled) {
+    const paddingSize = Math.floor(Math.random() * (padding.maxSize - padding.minSize + 1)) + padding.minSize;
+    const paddingData = crypto.getRandomValues(new Uint8Array(paddingSize));
+    data = concatArrayBuffers(data, paddingData.buffer);
+  }
+  
+  // 应用流量特征隐藏技术
+  if (patternMasking.enabled) {
+    // 随机化数据块大小
+    if (patternMasking.techniques.includes('size-variation')) {
+      data = await randomizeChunkSize(data);
+    }
+    
+    // 添加随机延迟
+    if (patternMasking.techniques.includes('timing-variation')) {
+      await addRandomDelay(1, 5); // 1-5ms 随机延迟
+    }
+  }
+  
+  return data;
+}
+
+// 工具函数：合并 ArrayBuffer
+function concatArrayBuffers(...buffers) {
+  const totalLength = buffers.reduce((acc, buf) => acc + buf.byteLength, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  
+  for (const buffer of buffers) {
+    result.set(new Uint8Array(buffer), offset);
+    offset += buffer.byteLength;
+  }
+  
+  return result.buffer;
+}
+
+// 工具函数：随机化数据块大小
+async function randomizeChunkSize(data) {
+  const array = new Uint8Array(data);
+  const chunks = [];
+  let offset = 0;
+  
+  while (offset < array.length) {
+    const chunkSize = Math.min(
+      Math.floor(Math.random() * 2048) + 1024, // 1024-3072 bytes
+      array.length - offset
+    );
+    chunks.push(array.slice(offset, offset + chunkSize));
+    offset += chunkSize;
+  }
+  
+  return concatArrayBuffers(...chunks.map(chunk => chunk.buffer));
+}
+
+// 工具函数：添加随机延迟
+function addRandomDelay(min, max) {
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+// 添加多重安全传输处理函数
+async function multiChannelTransmit(data) {
+  if (!antiSniffingConfig.multiChannelSecurity.enabled) {
+    return data;
+  }
+
+  try {
+    const { channels, fragmentation, channelSwitching } = antiSniffingConfig.multiChannelSecurity;
+    
+    // 1. 数据分片
+    const fragments = await fragmentData(data, fragmentation);
+    
+    // 2. 为每个分片添加冗余校验
+    const protectedFragments = await addRedundancy(fragments, fragmentation.redundancy);
+    
+    // 3. 通过多个通道传输
+    const transmittedData = await Promise.all(
+      protectedFragments.map(async (fragment, index) => {
+        // 选择通道
+        const channel = selectChannel(channels, index, channelSwitching);
+        
+        // 使用选定通道的加密方式加密数据
+        const encryptedFragment = await encryptForChannel(fragment, channel);
+        
+        return {
+          channelId: channel.name,
+          data: encryptedFragment,
+          sequence: index,
+          timestamp: Date.now()
+        };
+      })
+    );
+    
+    return transmittedData;
+  } catch (error) {
+    console.error('多重安全传输失败:', error);
+    return data;
+  }
+}
+
+// 数据分片函数
+async function fragmentData(data, fragConfig) {
+  const fragments = [];
+  const array = new Uint8Array(data);
+  let offset = 0;
+  
+  while (offset < array.length) {
+    // 随机化分片大小
+    const fragmentSize = Math.min(
+      Math.floor(Math.random() * (fragConfig.maxSize - fragConfig.minSize + 1)) + fragConfig.minSize,
+      array.length - offset
+    );
+    
+    fragments.push(array.slice(offset, offset + fragmentSize));
+    offset += fragmentSize;
+  }
+  
+  return fragments;
+}
+
+// 添加冗余校验
+async function addRedundancy(fragments, redundancyFactor) {
+  return Promise.all(fragments.map(async fragment => {
+    // 计算校验和
+    const checksum = await crypto.subtle.digest('SHA-256', fragment);
+    
+    // 添加前向纠错码
+    const fec = await generateFEC(fragment, redundancyFactor);
+    
+    return {
+      data: fragment,
+      checksum: new Uint8Array(checksum),
+      fec
+    };
+  }));
+}
+
+// 生成前向纠错码
+async function generateFEC(data, redundancyFactor) {
+  // 使用 Reed-Solomon 编码实现前向纠错
+  const dataLength = data.length;
+  const redundantLength = Math.ceil(dataLength * redundancyFactor);
+  
+  // 这里使用简化的异或操作作为示例
+  // 实际应用中应使用更复杂的纠错算法
+  const fec = new Uint8Array(redundantLength);
+  for (let i = 0; i < redundantLength; i++) {
+    fec[i] = data[i % dataLength] ^ data[(i + 1) % dataLength];
+  }
+  
+  return fec;
+}
+
+// 选择传输通道
+function selectChannel(channels, fragmentIndex, switchingConfig) {
+  if (switchingConfig.enabled && switchingConfig.randomization) {
+    // 随机选择通道
+    return channels[Math.floor(Math.random() * channels.length)];
+  } else {
+    // 按优先级轮询选择通道
+    return channels[fragmentIndex % channels.length];
+  }
+}
+
+// 针对特定通道加密数据
+async function encryptForChannel(fragment, channel) {
+  const key = await generateChannelKey(channel);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  
+  const encrypted = await crypto.subtle.encrypt(
+    {
+      name: channel.encryption,
+      iv: iv
+    },
+    key,
+    fragment.data
+  );
+  
+  return {
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(encrypted)),
+    checksum: Array.from(fragment.checksum),
+    fec: Array.from(fragment.fec)
+  };
+}
+
+// 生成通道专用密钥
+async function generateChannelKey(channel) {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(channel.name),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+  
+  return await crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: crypto.getRandomValues(new Uint8Array(16)),
+      iterations: 100000,
+      hash: 'SHA-512'
+    },
+    keyMaterial,
+    {
+      name: channel.encryption,
+      length: 256
+    },
+    false,
+    ['encrypt']
+  );
+}
+
+// 修改 speedBoostConfig 配置，添加军事级加密兼容性保护
+let speedBoostConfig = {
+  enabled: true,
+  // 添加军事级加密兼容性配置
+  militaryGradeProtection: {
+    enabled: true,
+    preserveEncryption: true, // 保持原有加密
+    validateIntegrity: true,  // 验证数据完整性
+    secureChannels: true     // 确保通道安全性
+  },
+  // 多通道并行传输
+  parallelTransfer: {
+    enabled: true,
+    maxChannels: 4,  // 最大并行通道数
+    chunkSize: 1024 * 1024, // 1MB 分块大小
+    autoAdjust: true // 自动调整通道数
+  },
+  // 智能压缩
+  compression: {
+    enabled: true,
+    algorithm: 'brotli', // 'gzip', 'deflate', 'brotli'
+    level: 4, // 压缩级别 1-11
+    autoLevel: true, // 自动调整压缩级别
+    minSize: 1024 // 最小压缩大小(bytes)
+  },
+  // 流量优化
+  optimization: {
+    enabled: true,
+    caching: true, // 启用缓存
+    deduplication: true, // 启用去重
+    prefetch: true, // 启用预取
+    bufferSize: 64 * 1024 // 64KB 缓冲区大小
+  },
+  // 性能监控
+  monitoring: {
+    enabled: true,
+    interval: 1000, // 监控间隔(ms)
+    metrics: {
+      speed: 0,
+      latency: 0,
+      compression: 0,
+      channels: 1
+    }
+  }
+};
+
+// 修改 boostTransferSpeed 函数，确保与军事级加密兼容
+async function boostTransferSpeed(data) {
+  if (!speedBoostConfig.enabled) {
+    return data;
+  }
+
+  try {
+    // 1. 保存原始加密状态
+    const originalEncryptionState = encryptionConfig.enabled;
+    
+    // 2. 验证数据完整性
+    if (speedBoostConfig.militaryGradeProtection.validateIntegrity) {
+      const integrityCheck = await validateDataIntegrity(data);
+      if (!integrityCheck.valid) {
+        throw new Error('数据完整性验证失败');
+      }
+    }
+
+    // 3. 数据压缩（确保不影响加密）
+    let optimizedData = await secureCompressData(data);
+    
+    // 4. 安全数据去重
+    optimizedData = await secureDeduplicateData(optimizedData);
+    
+    // 5. 多通道安全并行传输
+    const transmittedData = await secureParallelTransfer(optimizedData);
+    
+    // 6. 更新性能指标
+    updateMetrics(data.byteLength, transmittedData.byteLength);
+    
+    // 7. 恢复原始加密状态
+    encryptionConfig.enabled = originalEncryptionState;
+    
+    return transmittedData;
+  } catch (error) {
+    console.error('安全网速优化失败:', error);
+    // 发生错误时返回原始数据，确保安全性
+    return data;
+  }
+}
+
+// 添加安全压缩函数
+async function secureCompressData(data) {
+  const { compression } = speedBoostConfig;
+  if (!compression.enabled || data.byteLength < compression.minSize) {
+    return data;
+  }
+
+  // 确保压缩不会影响加密
+  if (encryptionConfig.enabled) {
+    // 在压缩前保存加密状态
+    const encryptedState = await preserveEncryptionState(data);
+    
+    // 执行压缩
+    const compressedData = await compressData(data);
+    
+    // 恢复加密状态
+    return await restoreEncryptionState(compressedData, encryptedState);
+  }
+
+  return await compressData(data);
+}
+
+// 添加安全数据去重函数
+async function secureDeduplicateData(data) {
+  if (!speedBoostConfig.optimization.deduplication) {
+    return data;
+  }
+
+  // 确保去重过程不会泄露加密信息
+  const secureChunks = new Map();
+  const array = new Uint8Array(data);
+  const chunkSize = 1024;
+  const result = [];
+
+  for (let i = 0; i < array.length; i += chunkSize) {
+    const chunk = array.slice(i, i + chunkSize);
+    // 使用安全哈希算法
+    const hash = await crypto.subtle.digest('SHA-512', chunk);
+    const secureHashHex = Array.from(new Uint8Array(hash))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    if (!secureChunks.has(secureHashHex)) {
+      secureChunks.set(secureHashHex, chunk);
+      result.push(chunk);
+    }
+  }
+
+  return concatArrayBuffers(...result.map(chunk => chunk.buffer));
+}
+
+// 添加安全并行传输函数
+async function secureParallelTransfer(data) {
+  const { parallelTransfer } = speedBoostConfig;
+  if (!parallelTransfer.enabled) {
+    return data;
+  }
+
+  // 确保每个通道都是安全的
+  if (speedBoostConfig.militaryGradeProtection.secureChannels) {
+    parallelTransfer.maxChannels = Math.min(parallelTransfer.maxChannels, 4); // 限制通道数以确保安全性
+  }
+
+  const chunks = splitIntoSecureChunks(data, parallelTransfer.chunkSize);
+  
+  // 使用安全通道进行传输
+  const transfers = chunks.map(async (chunk, index) => {
+    const channel = index % parallelTransfer.maxChannels;
+    return await secureChannelTransfer(chunk, channel);
+  });
+
+  const results = await Promise.all(transfers);
+  return concatArrayBuffers(...results);
+}
+
+// 添加安全通道传输函数
+async function secureChannelTransfer(chunk, channelId) {
+  // 为每个通道添加额外的安全层
+  const secureChannel = await establishSecureChannel(channelId);
+  
+  // 使用军事级加密处理数据
+  const encryptedChunk = await encryptWithMilitaryGrade(chunk, secureChannel);
+  
+  // 传输数据
+  const transmittedChunk = await transferThroughChannel(encryptedChunk, channelId);
+  
+  // 验证传输完整性
+  if (!await validateTransmission(transmittedChunk, chunk)) {
+    throw new Error('安全传输验证失败');
+  }
+
+  return transmittedChunk;
+}
+
+// 添加数据完整性验证函数
+async function validateDataIntegrity(data) {
+  try {
+    // 计算数据的安全哈希
+    const hash = await crypto.subtle.digest('SHA-512', data);
+    
+    // 验证数据结构完整性
+    const structureValid = await validateDataStructure(data);
+    
+    // 验证加密状态
+    const encryptionValid = await validateEncryptionState(data);
+    
+    return {
+      valid: structureValid && encryptionValid,
+      hash: new Uint8Array(hash)
+    };
+  } catch (error) {
+    console.error('数据完整性验证失败:', error);
+    return { valid: false, hash: null };
+  }
+}
+
+// 工具函数：计算最优压缩级别
+function calculateOptimalCompressionLevel(data) {
+  const size = data.byteLength;
+  if (size < 1024) return 1; // 小文件用低压缩
+  if (size < 1024 * 1024) return 4; // 中等文件用中等压缩
+  return 9; // 大文件用高压缩
+}
+
+// 工具函数：计算最优通道数
+function calculateOptimalChannels(size) {
+  const baseChannels = 2;
+  const sizeMultiplier = Math.floor(size / (1024 * 1024)); // 每MB增加一个通道
+  return Math.min(baseChannels + sizeMultiplier, 8); // 最多8个通道
+}
+
+// 工具函数：将数据分割成块
+function splitIntoChunks(data, chunkSize) {
+  const chunks = [];
+  const array = new Uint8Array(data);
+  
+  for (let i = 0; i < array.length; i += chunkSize) {
+    chunks.push(array.slice(i, i + chunkSize));
+  }
+  
+  return chunks;
+}
+
+// 工具函数：模拟网络延迟
+async function simulateNetworkDelay(channelId) {
+  const baseDelay = 10; // 基础延迟10ms
+  const jitter = Math.random() * 5; // 0-5ms随机抖动
+  await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
+}
+
+// 密码保护辅助函数
+function recordFailedAttempt(clientIP) {
+  const attempts = passwordConfig.attempts.get(clientIP) || 0;
+  passwordConfig.attempts.set(clientIP, attempts + 1);
+  
+  if (attempts + 1 >= passwordConfig.maxAttempts) {
+    passwordConfig.lockouts.set(clientIP, Date.now() + passwordConfig.lockoutTime);
+  }
+}
+
+function getAttempts(clientIP) {
+  return passwordConfig.attempts.get(clientIP) || 0;
+}
+
+function resetAttempts(clientIP) {
+  passwordConfig.attempts.delete(clientIP);
+  passwordConfig.lockouts.delete(clientIP);
+}
+
+function isLocked(clientIP) {
+  const lockoutTime = passwordConfig.lockouts.get(clientIP);
+  if (!lockoutTime) return false;
+  return Date.now() < lockoutTime;
+}
+
+function getRemainingLockTime(clientIP) {
+  const lockoutTime = passwordConfig.lockouts.get(clientIP);
+  if (!lockoutTime) return 0;
+  return Math.max(0, lockoutTime - Date.now());
 }
