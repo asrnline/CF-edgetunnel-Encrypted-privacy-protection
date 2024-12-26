@@ -74,15 +74,24 @@ CFPORTS	2053,2096,8443	❌	CF账户标准端口列表
 
 加密变量
 ENCRYPTION=true
+
 ENCRYPTION_KEY=your-secure-key
+
 ENCRYPTION_ITERATIONS=100000  # 可选
+
 ENCRYPTION_SALT_SIZE=16      # 可选
 
 环境变量
+
 REGION
+
 US: 美国
+
 JP: 日本
+
 TW: 台湾
+
 SG: 新加坡
+
 如果不指定 REGION,默认使用美国IP
 
