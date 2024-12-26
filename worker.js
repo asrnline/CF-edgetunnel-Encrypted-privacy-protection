@@ -104,6 +104,45 @@ let encryptionConfig = {
   }
 };
 
+// 在现有变量声明后添加防窃听配置
+let antiSniffingConfig = {
+  enabled: true,
+  // 端到端加密配置
+  e2ee: {
+    enabled: true,
+    algorithm: 'AES-GCM',
+    keySize: 256,
+    // 密钥派生参数
+    kdf: {
+      algorithm: 'PBKDF2',
+      iterations: 310000,
+      salt: null // 将在运行时初始化
+    }
+  },
+  // 完整性校验配置 
+  integrity: {
+    enabled: true,
+    algorithm: 'SHA-512',
+    key: null // 将在运行时初始化
+  },
+  // 反重放攻击配置
+  antiReplay: {
+    enabled: true,
+    window: 30000,
+    usedNonces: new Set()
+  }
+};
+
+// 添加初始化函数
+function initializeAntiSniffing() {
+  if (!antiSniffingConfig.e2ee.kdf.salt) {
+    antiSniffingConfig.e2ee.kdf.salt = crypto.getRandomValues(new Uint8Array(32));
+  }
+  if (!antiSniffingConfig.integrity.key) {
+    antiSniffingConfig.integrity.key = crypto.getRandomValues(new Uint8Array(32));
+  }
+}
+
 // 添加密钥派生函数
 async function deriveKey(password, salt) {
   const encoder = new TextEncoder();
@@ -295,9 +334,232 @@ async function deobfuscateData(data) {
   return data;
 }
 
+// 添加防窃听相关函数
+async function protectFromSniffing(data) {
+  if (!antiSniffingConfig.enabled) {
+    return data;
+  }
+
+  try {
+    // 生成随机 IV
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    
+    // 生成 nonce
+    const nonce = crypto.getRandomValues(new Uint8Array(16));
+    
+    // 时间戳
+    const timestamp = new Date().getTime();
+
+    // 构造要加密的数据
+    const payload = {
+      data,
+      nonce: Array.from(nonce),
+      timestamp
+    };
+
+    // 端到端加密
+    const encryptedData = await e2eeEncrypt(JSON.stringify(payload));
+
+    // 计算完整性校验值
+    const integrity = await calculateIntegrity(encryptedData);
+
+    // 组合最终数据
+    const protectedData = {
+      version: 1,
+      iv: Array.from(iv),
+      encrypted: encryptedData,
+      integrity,
+      timestamp
+    };
+
+    return protectedData;
+  } catch (error) {
+    console.error('防窃听保护失败:', error);
+    return data;
+  }
+}
+
+// 端到端加密函数
+async function e2eeEncrypt(data) {
+  const { algorithm, keySize, kdf } = antiSniffingConfig.e2ee;
+  
+  // 从 KDF 派生加密密钥
+  const key = await crypto.subtle.importKey(
+    'raw',
+    kdf.salt,
+    { name: kdf.algorithm },
+    false,
+    ['deriveKey']
+  );
+
+  const derivedKey = await crypto.subtle.deriveKey(
+    {
+      name: kdf.algorithm,
+      salt: kdf.salt,
+      iterations: kdf.iterations,
+      hash: 'SHA-512'
+    },
+    key,
+    {
+      name: algorithm,
+      length: keySize
+    },
+    false,
+    ['encrypt']
+  );
+
+  // 加密数据
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt(
+    {
+      name: algorithm,
+      iv
+    },
+    derivedKey,
+    new TextEncoder().encode(data)
+  );
+
+  return {
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(encrypted))
+  };
+}
+
+// 计算完整性校验值
+async function calculateIntegrity(data) {
+  const { algorithm, key } = antiSniffingConfig.integrity;
+
+  const hmacKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    {
+      name: 'HMAC',
+      hash: { name: algorithm }
+    },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    hmacKey,
+    new TextEncoder().encode(JSON.stringify(data))
+  );
+
+  return Array.from(new Uint8Array(signature));
+}
+
+// 验证防窃听保护
+async function verifyProtection(protectedData) {
+  if (!antiSniffingConfig.enabled) {
+    return protectedData;
+  }
+
+  try {
+    // 验证版本
+    if (protectedData.version !== 1) {
+      throw new Error('不支持的防窃听保护版本');
+    }
+
+    // 验证时间戳(防重放攻击)
+    const now = new Date().getTime();
+    if (Math.abs(now - protectedData.timestamp) > antiSniffingConfig.antiReplay.window) {
+      throw new Error('数据已过期');
+    }
+
+    // 验证完整性
+    const calculatedIntegrity = await calculateIntegrity(protectedData.encrypted);
+    if (!arrayEquals(calculatedIntegrity, protectedData.integrity)) {
+      throw new Error('数据完整性校验失败');
+    }
+
+    // 解密数据
+    const decrypted = await e2eeDecrypt(protectedData.encrypted);
+    const payload = JSON.parse(decrypted);
+
+    // 验证 nonce 是否被使用过
+    if (antiSniffingConfig.antiReplay.usedNonces.has(payload.nonce.join())) {
+      throw new Error('重放攻击');
+    }
+    antiSniffingConfig.antiReplay.usedNonces.add(payload.nonce.join());
+
+    // 清理过期的 nonce
+    cleanupExpiredNonces();
+
+    return payload.data;
+  } catch (error) {
+    console.error('防窃听验证失败:', error);
+    throw error;
+  }
+}
+
+// 端到端解密函数
+async function e2eeDecrypt(encryptedData) {
+  const { algorithm, keySize, kdf } = antiSniffingConfig.e2ee;
+  
+  // 从 KDF 派生解密密钥
+  const key = await crypto.subtle.importKey(
+    'raw',
+    kdf.salt,
+    { name: kdf.algorithm },
+    false,
+    ['deriveKey']
+  );
+
+  const derivedKey = await crypto.subtle.deriveKey(
+    {
+      name: kdf.algorithm,
+      salt: kdf.salt,
+      iterations: kdf.iterations,
+      hash: 'SHA-512'
+    },
+    key,
+    {
+      name: algorithm,
+      length: keySize
+    },
+    false,
+    ['decrypt']
+  );
+
+  // 解密数据
+  const decrypted = await crypto.subtle.decrypt(
+    {
+      name: algorithm,
+      iv: new Uint8Array(encryptedData.iv)
+    },
+    derivedKey,
+    new Uint8Array(encryptedData.data)
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
+// 清理过期的 nonce
+function cleanupExpiredNonces() {
+  const now = new Date().getTime();
+  for (const nonce of antiSniffingConfig.antiReplay.usedNonces) {
+    const [timestamp] = nonce.split('-');
+    if (now - parseInt(timestamp) > antiSniffingConfig.antiReplay.window) {
+      antiSniffingConfig.antiReplay.usedNonces.delete(nonce);
+    }
+  }
+}
+
+// 数组比较函数
+function arrayEquals(a, b) {
+  return Array.isArray(a) && 
+         Array.isArray(b) && 
+         a.length === b.length && 
+         a.every((val, index) => val === b[index]);
+}
+
 export default {
 	async fetch(request, env, ctx) {
 		try {
+			// 初始化防窃听配置
+			initializeAntiSniffing();
+			
 			// 配置加密
 			encryptionConfig.enabled = env.ENCRYPTION === 'true';
 			encryptionConfig.key = env.ENCRYPTION_KEY;
@@ -669,13 +931,13 @@ async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portR
 			if (proxyIP.includes('.tp')) portRemote = proxyIP.split('.tp')[1].split('.')[0] || portRemote;
 			tcpSocket = await connectAndWrite(proxyIP || addressRemote, portRemote);
 		}
-		// 无论重试是否成功，都要关闭 WebSocket（可能是为了重新建立连接）
+		// 无论重试是否成功，都要关闭 WebSocket（可���是为了重新建立连接）
 		tcpSocket.closed.catch(error => {
 			console.log('retry tcpSocket closed error', error);
 		}).finally(() => {
 			safeCloseWebSocket(webSocket);
 		})
-		// 建立从远程 Socket 到 WebSocket 的数据流
+		// 建立从���程 Socket 到 WebSocket 的数据流
 		remoteSocketToWS(tcpSocket, webSocket, 维列斯ResponseHeader, null, log);
 	}
 
@@ -890,7 +1152,7 @@ function process维列斯Header(维列斯Buffer, userID) {
 			// seems no need add [] for ipv6
 			break;
 		default:
-			// 无效的地址类型
+			// 无效的地址���型
 			return {
 				hasError: true,
 				message: `invild addressType is ${addressType}`,
@@ -948,8 +1210,9 @@ async function remoteSocketToWS(remoteSocket, webSocket, 维列斯ResponseHeader
 						);
 					}
 
-					// 添加加密处理
-					const encryptedChunk = await encryptTraffic(chunk);
+					// 添加防窃听保护
+					const protectedChunk = await protectFromSniffing(chunk);
+					const encryptedChunk = await encryptTraffic(protectedChunk);
 
 					if (维列斯Header) {
 						// 如果有 维列斯 响应头部，将其与第一个数据块一起发送
@@ -1092,7 +1355,7 @@ function unsafeStringify(arr, offset = 0) {
 /**
  * 将字节数组转换为 UUID 字符串，并验证其有效性
  * 这是一个安全的函数，它确保返回的 UUID 格式正确
- * @param {Uint8Array} arr 包含 UUID 字节的数组
+ * @param {Uint8Array} arr ��含 UUID 字节的数组
  * @param {number} offset 数组中 UUID 开始的位置，默认为 0
  * @returns {string} 有效的 UUID 字符串
  * @throws {TypeError} 如果生成的 UUID 字符串无效
@@ -1986,98 +2249,7 @@ async function 整理测速结果(tls) {
 	return newAddressescsv;
 }
 
-// 在现有变量声明后添加节点检测相关配置
-let nodeCheckConfig = {
-  enabled: true,  // 是否启用节点检测
-  timeout: 3000,  // 超时时间(毫秒)
-  parallel: 10,   // 并发检测数
-  retries: 2      // 重试次数
-};
-
-// 添加节点检测函数
-async function checkNodeAvailability(node) {
-  try {
-    // 解析节点信息
-    const nodeInfo = parseNodeInfo(node);
-    if (!nodeInfo) return false;
-
-    const { address, port } = nodeInfo;
-    
-    // 创建 AbortController 用于超时控制
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), nodeCheckConfig.timeout);
-
-    try {
-      // 尝试建立连接
-      const socket = await connect({
-        hostname: address,
-        port: parseInt(port),
-        signal: controller.signal
-      });
-
-      // 如果能建立连接，说明节点可用
-      await socket.close();
-      return true;
-    } catch (err) {
-      return false;
-    } finally {
-      clearTimeout(timeout);
-    }
-  } catch (err) {
-    return false;
-  }
-}
-
-// 解析节点信息
-function parseNodeInfo(node) {
-  try {
-    // 处理 v2ray/维列斯 格式的节点
-    if (node.includes('vless://') || node.includes('vmess://')) {
-      const url = new URL(node);
-      const [address, port] = url.host.split(':');
-      return { address, port };
-    }
-    
-    // 处理其他格式节点
-    const matches = node.match(/([^@]+)@([^:]+):(\d+)/);
-    if (matches) {
-      return {
-        address: matches[2],
-        port: matches[3]
-      };
-    }
-    
-    return null;
-  } catch (err) {
-    return null;
-  }
-}
-
-// 批量检测节点
-async function batchCheckNodes(nodes) {
-  const validNodes = [];
-  
-  // 分批并发检测
-  for (let i = 0; i < nodes.length; i += nodeCheckConfig.parallel) {
-    const batch = nodes.slice(i, i + nodeCheckConfig.parallel);
-    const checks = batch.map(async node => {
-      // 重试机制
-      for (let retry = 0; retry < nodeCheckConfig.retries; retry++) {
-        if (await checkNodeAvailability(node)) {
-          validNodes.push(node);
-          break;
-        }
-      }
-    });
-    
-    await Promise.all(checks);
-  }
-  
-  return validNodes;
-}
-
-// 修改生成本地订阅函数,添加节点检测
-async function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv, newAddressesnotlsapi, newAddressesnotlscsv) {
+function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv, newAddressesnotlsapi, newAddressesnotlscsv) {
 	const regex = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[.*\]):?(\d+)?#?(.*)?$/;
 	addresses = addresses.concat(newAddressesapi);
 	addresses = addresses.concat(newAddressescsv);
@@ -2207,14 +2379,6 @@ async function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddress
 	let base64Response = responseBody; // 重新进行 Base64 编码
 	if (noTLS == 'true') base64Response += `\n${notlsresponseBody}`;
 	if (link.length > 0) base64Response += '\n' + link.join('\n');
-	
-	// 如果启用了节点检测
-	if (nodeCheckConfig.enabled) {
-		const nodes = base64Response.split('\n');
-		const validNodes = await batchCheckNodes(nodes);
-		base64Response = validNodes.join('\n');
-	}
-	
 	return btoa(base64Response);
 }
 
