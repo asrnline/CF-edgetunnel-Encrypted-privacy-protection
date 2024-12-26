@@ -72,6 +72,16 @@ URL	https://blog.cmliussss.com	❌	主页反代伪装(支持多url, url之间使
 
 CFPORTS	2053,2096,8443	❌	CF账户标准端口列表	
 
+灵活的配置选项
+
+ENCRYPTION: 是否启用加密
+
+ENCRYPTION_KEY: 加密主密钥
+
+ENCRYPTION_ITERATIONS: PBKDF2迭代次数
+
+ENCRYPTION_SALT_SIZE: 盐值大小
+
 加密变量
 ENCRYPTION=true
 
