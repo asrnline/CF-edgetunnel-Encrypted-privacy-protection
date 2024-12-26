@@ -632,16 +632,6 @@ function arrayEquals(a, b) {
          a.every((val, index) => val === b[index]);
 }
 
-// 在现有变量声明后添加密码相关配置
-let passwordConfig = {
-  enabled: false, // 是否启用密码保护
-  password: '', // 密码
-  maxAttempts: 3, // 最大尝试次数
-  lockoutTime: 30 * 60 * 1000, // 锁定时间(30分钟)
-  attempts: new Map(), // 记录尝试次数
-  lockouts: new Map() // 记录锁定时间
-};
-
 export default {
 	async fetch(request, env, ctx) {
 		try {
@@ -1837,119 +1827,7 @@ const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRT
  * @returns {Promise<string>}
  */
 async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, url, env) {
-	// 获取密码配置
-	passwordConfig.enabled = env.PASSWORD_PROTECT === 'true';
-	passwordConfig.password = env.ACCESS_PASSWORD || '';
-	
-	// 如果启用了密码保护且访问的是配置页面
-	if (passwordConfig.enabled && !url.searchParams.has('password')) {
-		const clientIP = url.headers?.get('CF-Connecting-IP') || 'unknown';
-		
-		// 检查是否被锁定
-		if (isLocked(clientIP)) {
-			return `
-				<h2>访问被锁定</h2>
-				<p>由于多次密码错误，您的访问已被临时锁定。</p>
-				<p>请在 ${Math.ceil(getRemainingLockTime(clientIP) / 60000)} 分钟后重试。</p>
-			`;
-		}
-
-		// 显示密码输入页面
-		return `
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<title>访问验证</title>
-				<meta charset="utf-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1">
-				<style>
-					body {
-						font-family: Arial, sans-serif;
-						margin: 40px;
-						text-align: center;
-					}
-					.container {
-						max-width: 400px;
-						margin: 0 auto;
-						padding: 20px;
-						border: 1px solid #ccc;
-						border-radius: 5px;
-					}
-					input[type="password"] {
-						width: 200px;
-						padding: 8px;
-						margin: 10px 0;
-					}
-					button {
-						padding: 8px 20px;
-						background-color: #4CAF50;
-						color: white;
-						border: none;
-						border-radius: 4px;
-						cursor: pointer;
-					}
-					button:hover {
-						background-color: #45a049;
-					}
-					.error {
-						color: red;
-						margin-top: 10px;
-					}
-				</style>
-			</head>
-			<body>
-				<div class="container">
-					<h2>访问验证</h2>
-					<p>请输入访问密码：</p>
-					<form id="passwordForm">
-						<input type="password" id="password" name="password" required>
-						<br>
-						<button type="submit">验证</button>
-					</form>
-					<div id="error" class="error"></div>
-				</div>
-				<script>
-					document.getElementById('passwordForm').onsubmit = function(e) {
-						e.preventDefault();
-						const password = document.getElementById('password').value;
-						const currentUrl = window.location.href;
-						window.location.href = currentUrl + (currentUrl.includes('?') ? '&' : '?') + 'password=' + encodeURIComponent(password);
-					};
-				</script>
-			</body>
-			</html>
-		`;
-	}
-
-	// 如果提供了密码，验证密码
-	if (passwordConfig.enabled && url.searchParams.has('password')) {
-		const providedPassword = url.searchParams.get('password');
-		const clientIP = url.headers?.get('CF-Connecting-IP') || 'unknown';
-		
-		if (providedPassword !== passwordConfig.password) {
-			// 记录失败尝试
-			recordFailedAttempt(clientIP);
-			
-			if (isLocked(clientIP)) {
-				return `
-					<h2>访问被锁定</h2>
-					<p>由于多次密码错误，您的访问已被临时锁定。</p>
-					<p>请在 ${Math.ceil(getRemainingLockTime(clientIP) / 60000)} 分钟后重试。</p>
-				`;
-			}
-
-			return `
-				<h2>密码错误</h2>
-				<p>请<a href="${url.pathname}">重新输入</a>密码。</p>
-				<p>剩余尝试次数：${passwordConfig.maxAttempts - getAttempts(clientIP)}</p>
-			`;
-		}
-		
-		// 密码正确，重置尝试次数
-		resetAttempts(clientIP);
-	}
-
-	// 继续原有的配置生成逻辑
+	// 将 url 赋值给 _url 以供后续使用
 	const _url = url;
 	
 	// 检查加密配置状态
@@ -3450,33 +3328,179 @@ async function simulateNetworkDelay(channelId) {
   await new Promise(resolve => setTimeout(resolve, baseDelay + jitter));
 }
 
-// 密码保护辅助函数
-function recordFailedAttempt(clientIP) {
-  const attempts = passwordConfig.attempts.get(clientIP) || 0;
-  passwordConfig.attempts.set(clientIP, attempts + 1);
+// 在现有变量声明后添加智能路由配置
+let routingConfig = {
+  enabled: true,
+  rules: {
+    // 添加常见软件和网站的路由规则
+    applications: [
+      {
+        type: 'field',
+        domain: [
+          'netflix.com',
+          'netflix.net',
+          'nflxvideo.net',
+          'nflxso.net',
+          'nflxext.com',
+          'nflximg.net'
+        ],
+        outboundTag: 'netflix'
+      },
+      {
+        type: 'field', 
+        domain: [
+          'youtube.com',
+          'googlevideo.com',
+          'ytimg.com',
+          'gvt1.com',
+          'ggpht.com'
+        ],
+        outboundTag: 'youtube'
+      },
+      {
+        type: 'field',
+        domain: [
+          'spotify.com',
+          'spoti.fi',
+          'spotifycdn.net',
+          'scdn.co'
+        ],
+        outboundTag: 'spotify'
+      }
+    ],
+    
+    // 添加常见协议的路由规则
+    protocols: [
+      {
+        type: 'field',
+        protocol: ['bittorrent'],
+        outboundTag: 'direct'
+      },
+      {
+        type: 'field',
+        protocol: ['quic'],
+        outboundTag: 'quic'
+      }
+    ],
+    
+    // 添加IP路由规则
+    ip: [
+      {
+        type: 'field',
+        ip: ['geoip:private'],
+        outboundTag: 'direct'
+      },
+      {
+        type: 'field',
+        ip: ['geoip:cn'],
+        outboundTag: 'direct'
+      }
+    ]
+  },
   
-  if (attempts + 1 >= passwordConfig.maxAttempts) {
-    passwordConfig.lockouts.set(clientIP, Date.now() + passwordConfig.lockoutTime);
+  // 智能分流设置
+  balancing: {
+    enabled: true,
+    strategy: 'latency', // latency/random/round-robin
+    probeInterval: 300,  // 探测间隔(秒)
+    maxFailures: 3,      // 最大失败次数
+    healthCheck: {
+      enabled: true,
+      timeout: 3,        // 超时时间(秒)
+      interval: 30       // 检查间隔(秒) 
+    }
+  },
+  
+  // 自动故障转移
+  fallback: {
+    enabled: true,
+    timeout: 5,         // 超时时间(秒)
+    priority: [         // 故障转移优先级
+      'netflix',
+      'youtube', 
+      'spotify',
+      'direct'
+    ]
   }
-}
+};
 
-function getAttempts(clientIP) {
-  return passwordConfig.attempts.get(clientIP) || 0;
-}
+// 在现有变量声明后添加智能DNS配置
+let dnsConfig = {
+  enabled: true,
+  servers: [
+    {
+      address: '1.1.1.1',
+      port: 53,
+      domains: ['geosite:geolocation-!cn']
+    },
+    {
+      address: '114.114.114.114', 
+      port: 53,
+      domains: ['geosite:cn']
+    },
+    {
+      address: '8.8.8.8',
+      port: 53,
+      domains: ['geosite:google']
+    }
+  ],
+  
+  // DNS缓存设置
+  cache: {
+    enabled: true,
+    size: 4096,         // 缓存大小
+    ttl: 3600          // 缓存时间(秒)
+  },
+  
+  // DNS优选设置
+  optimization: {
+    enabled: true,
+    preferIPv4: true,  // 优先IPv4
+    timeout: 2,        // DNS查询超时(秒)
+    concurrent: 3      // 并发查询数
+  }
+};
 
-function resetAttempts(clientIP) {
-  passwordConfig.attempts.delete(clientIP);
-  passwordConfig.lockouts.delete(clientIP);
-}
-
-function isLocked(clientIP) {
-  const lockoutTime = passwordConfig.lockouts.get(clientIP);
-  if (!lockoutTime) return false;
-  return Date.now() < lockoutTime;
-}
-
-function getRemainingLockTime(clientIP) {
-  const lockoutTime = passwordConfig.lockouts.get(clientIP);
-  if (!lockoutTime) return 0;
-  return Math.max(0, lockoutTime - Date.now());
-}
+// 在现有变量声明后添加智能优化配置
+let optimizationConfig = {
+  enabled: true,
+  
+  // TCP优化
+  tcp: {
+    enabled: true,
+    fastOpen: true,     // TCP快速打开
+    keepAlive: true,    // 保持连接
+    reusePort: true,    // 端口重用
+    congestion: 'bbr',  // 拥塞控制算法
+    bufferSize: 32      // TCP缓冲区大小(KB)
+  },
+  
+  // UDP优化  
+  udp: {
+    enabled: true,
+    timeout: 300,      // UDP会话超时(秒)
+    bufferSize: 8      // UDP缓冲区大小(KB)
+  },
+  
+  // HTTP优化
+  http: {
+    enabled: true,
+    compression: true,  // HTTP压缩
+    multiplexing: true, // 多路复用
+    idleTimeout: 60,    // 空闲超时(秒)
+    maxConnections: 100 // 最大连接数
+  },
+  
+  // 智能缓存
+  cache: {
+    enabled: true,
+    size: 1024,        // 缓存大小(MB)
+    ttl: 3600,         // 缓存时间(秒)
+    types: [           // 缓存类型
+      'image/*',
+      'video/*',
+      'audio/*',
+      'text/*'
+    ]
+  }
+};
