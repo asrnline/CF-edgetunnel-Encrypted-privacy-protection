@@ -104,9 +104,3 @@ TW: 台湾
 SG: 新加坡
 
 如果不指定 REGION,默认使用美国IP
-
-UUID添加登录验证在环境变量中设置：
-
-PASSWORD_PROTECT=true
-
-ACCESS_PASSWORD=你的密码
