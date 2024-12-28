@@ -96,17 +96,3 @@ ENCRYPTION_KEY=加密密钥
 ENCRYPTION_ITERATIONS=100000  # 可选
 
 ENCRYPTION_SALT_SIZE=16      # 可选
-
-环境变量
-
-REGION
-
-US: 美国
-
-JP: 日本
-
-TW: 台湾
-
-SG: 新加坡
-
-如果不指定 REGION,默认使用美国IP
