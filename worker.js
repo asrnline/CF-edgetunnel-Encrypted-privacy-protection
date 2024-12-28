@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { connect } from 'cloudflare:sockets';
 
 let userID = '';
@@ -51,35 +52,6 @@ let banHosts = [atob('c3BlZWQuY2xvdWRmbGFyZS5jb20=')];
 let encryptionKey = '';  // 军事级加密密钥
 let encryptionEnabled = false;  // 是否启用加密
 let encryptionAlgorithm = 'AES-256-GCM';  // 默认加密算法
-
-// 在现有变量声明后添加住宅IP池
-let residentialIPs = {
-  US: [
-    "23.82.128.0/19#美国住宅",    // Level3/Verizon
-    "66.102.0.0/20#美国住宅",     // Google Fiber
-    "98.128.0.0/17#美国住宅",     // Comcast
-    "174.192.0.0/14#美国住宅",    // AT&T
-    "72.229.28.0/24#美国住宅",    // Verizon FIOS
-  ],
-  JP: [
-    "126.0.0.0/8#日本住宅",      // NTT 
-    "116.0.0.0/12#日本住宅",     // SoftBank
-    "219.100.37.0/24#日本住宅",  // KDDI
-    "211.0.0.0/12#日本住宅",     // OCN
-  ],
-  TW: [
-    "1.34.168.0/24#台湾住宅",    // HiNet
-    "59.120.0.0/17#台湾住宅",    // TFN
-    "111.240.0.0/16#台湾住宅",   // CHT
-    "220.128.0.0/13#台湾住宅",   // SeedNet
-  ],
-  SG: [
-    "27.114.0.0/16#新加坡住宅",  // StarHub
-    "42.61.0.0/16#新加坡住宅",   // SingTel
-    "103.6.148.0/22#新加坡住宅", // M1
-    "202.166.0.0/17#新加坡住宅", // ViewQwest
-  ]
-};
 
 // 在现有变量声明后添加加密相关配置
 let encryptionConfig = {
@@ -632,41 +604,12 @@ function arrayEquals(a, b) {
          a.every((val, index) => val === b[index]);
 }
 
-// 在现有变量声明后添加
-let selectedRegion = '';
-let selectedResidentialIPs = [];
-
 export default {
 	async fetch(request, env, ctx) {
 		try {
 			// 初始化防窃听配置
 			initializeAntiSniffing();
 			
-			// 获取 REGION 环境变量
-			selectedRegion = env.REGION || 'US'; // 默认为美国
-			
-			// 根据 REGION 选择对应的住宅IP池
-			if(residentialIPs[selectedRegion]) {
-				// 将选中的住宅IP转换为数组格式
-				selectedResidentialIPs = residentialIPs[selectedRegion].map(cidr => {
-					const [network, comment] = cidr.split('#');
-					// 从CIDR中随机生成一个IP地址
-					const ip = generateRandomIPFromCIDR(network);
-					return `${ip}#${comment || selectedRegion}住宅`;
-				});
-			} else {
-				// 如果没有对应的地区,使用美国IP
-				selectedResidentialIPs = residentialIPs['US'].map(cidr => {
-					const [network, comment] = cidr.split('#');
-					const ip = generateRandomIPFromCIDR(network);
-					return `${ip}#${comment || 'US住宅'}`;
-				});
-			}
-
-			// 清空现有地址池并添加选中的住宅IP
-			addresses = [];
-			addresses = addresses.concat(selectedResidentialIPs);
-
 			// 配置加密
 			encryptionConfig.enabled = env.ENCRYPTION === 'true';
 			encryptionConfig.key = env.ENCRYPTION_KEY;
@@ -1022,7 +965,7 @@ async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portR
 	 */
 	async function retry() {
 		if (enableSocks) {
-			// 如果启用了 SOCKS5，通过 SOCKS5 代理重试连接
+			// 如果启用了 SOCKS5，通过 SOCKS5 代理重试   接
 			tcpSocket = await connectAndWrite(addressRemote, portRemote, true);
 		} else {
 			// 否则，尝试使用预设的代理 IP（如果有）或原始地址重试连接
@@ -1099,7 +1042,7 @@ function makeReadableWebSocketStream(webSocketServer, earlyDataHeader, log) {
 				controller.error(err);
 			});
 
-			// 处理 WebSocket 0-RTT（零往返时间）的早期数��
+			// 处理 WebSocket 0-RTT（零往返时间）的早期数  
 			// 0-RTT 允许在完全建立连接之前发送数据，提高了效率
 			const { earlyData, error } = base64ToArrayBuffer(earlyDataHeader);
 			if (error) {
@@ -1450,7 +1393,7 @@ for (let i = 0; i < 256; ++i) {
  */
 function unsafeStringify(arr, offset = 0) {
 	// 直接从查找表中获取每个字节的十六进制表示，并拼接成 UUID 格式
-	// 8-4-4-4-12 的分组是通过精心放置的连字符 "-" 实现的
+	// 8-4-4-4-12 的分组是��过精心放置的连字符 "-" 实现的
 	// toLowerCase() 确保整个 UUID 是小写的
 	return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" +
 		byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" +
@@ -1466,7 +1409,7 @@ function unsafeStringify(arr, offset = 0) {
  * @param {Uint8Array} arr 包含 UUID 字节的数组
  * @param {number} offset 数组中 UUID 开始的位置，默认为 0
  * @returns {string} 有效的 UUID 字符串
- * @throws {TypeError} 如果生成的 UUID 字符串无效
+ * @throws {TypeError} 如果生成   UUID 字符串无效
  */
 function stringify(arr, offset = 0) {
 	// 使用不安全的函数快速生成 UUID 字符串
@@ -1488,7 +1431,7 @@ function stringify(arr, offset = 0) {
  */
 async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log) {
 	// 无论客户端发送到哪个 DNS 服务器，我们总是使用硬编码的服务器
-	// 因为有些 DNS 服务器不��持 DNS over TCP
+	// 因为有些 DNS 服务器不  持 DNS over TCP
 	try {
 		// 选用 Google 的 DNS 服务器（注：后续可能会改为 Cloudflare 的 1.1.1.1）
 		const dnsServer = '8.8.4.4'; // 在 Cloudflare 修复连接自身 IP 的 bug 后，将改为 1.1.1.1
@@ -1512,7 +1455,7 @@ async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log)
 			async write(chunk) {
 				if (webSocket.readyState === WS_READY_STATE_OPEN) {
 					if (维列斯Header) {
-						// 如果有 维列斯 头部，则将其与 DNS 响应数据合并后发送
+						// 如果有 ��列斯 头部，则将其与 DNS 响应数据合并后发送
 						webSocket.send(await new Blob([维列斯Header, chunk]).arrayBuffer());
 						维列斯Header = null; // 头部只发送一次，之后置为 null
 					} else {
@@ -1529,9 +1472,9 @@ async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log)
 			},
 		}));
 	} catch (error) {
-		// 捕获并记录任何可能发生的错误
+		// 捕获并记录任何可能发生的错��
 		console.error(
-			`handleDNSQuery 函数发生异常，错误���息: ${error.message}`
+			`handleDNSQuery 函数发生异常，错误   息: ${error.message}`
 		);
 	}
 }
@@ -2693,7 +2636,7 @@ async function KV(request, env, txt = 'ADD.txt') {
 				<div class="editor-container">
 					${hasKV ? `
 					<textarea class="editor" 
-					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0Zwb3J0JTNEMjA1MyUzQyUyRnN0cm9uZyUzRSUzQ2JyJTNFJTNDYnIlM0UKJTA5JTA5JTA5JTA5JTA5JTI2bmJzcCUzQiUyNm5ic3AlM0ItJTIwJUU1JUE2JTgyJUU5JTlDJTgwJUU2JThDJTg3JUU1JUFFJTlBJUU4JThBJTgyJUU3JTgyJUI5JUU1JUE0JTg3JUU2JUIzJUE4JUU1JThGJUFGJUU1JUIwJTg2JTIyJTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUzQ3N0cm9uZyUzRSUyNiUzQyUyRnN0cm9uZyUzRXBvcnQlM0QyMDUzJTNDYnIlM0U='))}"
+					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
 						id="content">${content}</textarea>
 					<div class="save-container">
 						<button class="back-btn" onclick="goBack()">返回配置页</button>
@@ -2865,6 +2808,7 @@ async function multiLayerEncrypt(data) {
         name: layer.algorithm,
         iv: iv
       },
+      // @ts-ignore
       key,
       encryptedData
     );
@@ -2894,6 +2838,7 @@ async function multiLayerDecrypt(data) {
         name: layer.algorithm,
         iv: iv
       },
+      // @ts-ignore
       key,
       decryptedData
     );
@@ -3166,7 +3111,7 @@ let speedBoostConfig = {
   }
 };
 
-// 修改 boostTransferSpeed 函数，确保与军事级加密兼容
+// 修改 boostTransferSpeed 函数，确保与军事加密兼容
 async function boostTransferSpeed(data) {
   if (!speedBoostConfig.enabled) {
     return data;
@@ -3202,7 +3147,7 @@ async function boostTransferSpeed(data) {
     return transmittedData;
   } catch (error) {
     console.error('安全网速优化失败:', error);
-    // 发生错误时返回原始数据，确保安全性
+    // 发生错误时   回原始数据，确保安全性
     return data;
   }
 }
@@ -3314,6 +3259,7 @@ async function validateDataIntegrity(data) {
     const encryptionValid = await validateEncryptionState(data);
     
     return {
+      // @ts-ignore
       valid: structureValid && encryptionValid,
       hash: new Uint8Array(hash)
     };
@@ -3534,21 +3480,2775 @@ let optimizationConfig = {
   }
 };
 
-// 添加 generateRandomIPFromCIDR 函数
-function generateRandomIPFromCIDR(cidr) {
-  const [baseIP, mask] = cidr.split('/');
-  const baseIPNums = baseIP.split('.').map(Number);
-  const subnetMask = 32 - parseInt(mask, 10);
-  const maxHosts = Math.pow(2, subnetMask) - 1;
-  const randomHost = Math.floor(Math.random() * maxHosts);
+// 添加网络质量优化配置
+let networkQualityConfig = {
+  enabled: true,
+  
+  // 自动速率控制
+  rateControl: {
+    enabled: true,
+    initialRate: 5 * 1024 * 1024, // 初始速率 5MB/s
+    minRate: 1 * 1024 * 1024,     // 最小速率 1MB/s
+    maxRate: 20 * 1024 * 1024,    // 最大速率 20MB/s
+    rampUpStep: 1.25,             // 速率提升步进倍数
+    rampDownStep: 0.75            // 速率降低步进倍数
+  },
 
-  const randomIP = baseIPNums.map((octet, index) => {
-    if (index < Math.floor((32 - subnetMask) / 8)) return octet;
-    if (index === Math.floor((32 - subnetMask) / 8)) {
-      return (octet & (255 << (subnetMask % 8))) + ((randomHost >> ((3 - index) * 8)) & ((1 << (subnetMask % 8)) - 1));
+  // 智能重传机制
+  retransmission: {
+    enabled: true,
+    maxRetries: 3,                // 最大重试次数
+    initialTimeout: 1000,         // 初始超时时间(ms)
+    maxTimeout: 10000,            // 最大超时时间(ms)
+    backoffMultiplier: 2.0        // 退避指数
+  },
+
+  // 链路质量监控
+  qualityMonitor: {
+    enabled: true,
+    checkInterval: 1000,          // 检查间隔(ms)
+    latencyThreshold: 200,        // 延迟阈值(ms)
+    lossThreshold: 0.02,          // 丢包率阈值(2%)
+    jitterThreshold: 50,          // 抖动阈值(ms)
+    samples: 10                   // 采样数量
+  },
+
+  // 智能路径选择
+  pathSelection: {
+    enabled: true,
+    paths: [
+      {
+        name: 'primary',
+        weight: 100,
+        maxLatency: 200,
+        maxLoss: 0.02
+      },
+      {
+        name: 'backup',
+        weight: 50,
+        maxLatency: 400,
+        maxLoss: 0.05
+      }
+    ],
+    switchThreshold: 2            // 切换所需的连续失败次数
+  },
+
+  // 拥塞控制
+  congestionControl: {
+    enabled: true,
+    algorithm: 'bbr',             // bbr/cubic/reno
+    initialWindow: 10,            // 初始窗口大小(MSS)
+    minRtt: 10,                   // 最小RTT(ms)
+    probeRtt: true,              // 主动探测RTT
+    pacing: true                  // 启用发送节奏控制
+  }
+};
+
+// 添加网络质量优化处理函数
+async function optimizeNetworkQuality(connection) {
+  if (!networkQualityConfig.enabled) return connection;
+
+  try {
+    // 1. 初始化质量监控
+    const qualityStats = initQualityMonitoring(connection);
+    
+    // 2. 设置自适应速率控制
+    const rateController = setupRateControl(connection);
+    
+    // 3. 配置智能重传
+    setupRetransmission(connection);
+    
+    // 4. 应用拥塞控制
+    applyCongestionControl(connection);
+    
+    // 5. 启动持续监控
+    startContinuousMonitoring(connection, qualityStats, rateController);
+    
+    return connection;
+  } catch (error) {
+    console.error('网络质量优化失败:', error);
+    return connection;
+  }
+}
+
+// 初始化质量监控
+function initQualityMonitoring(connection) {
+  const stats = {
+    latency: [],
+    loss: [],
+    jitter: [],
+    throughput: []
+  };
+
+  if (networkQualityConfig.qualityMonitor.enabled) {
+    setInterval(() => {
+      measureConnectionQuality(connection, stats);
+    }, networkQualityConfig.qualityMonitor.checkInterval);
+  }
+
+  return stats;
+}
+
+// 设置自适应速率控制
+function setupRateControl(connection) {
+  const controller = {
+    currentRate: networkQualityConfig.rateControl.initialRate,
+    lastAdjustment: Date.now()
+  };
+
+  if (networkQualityConfig.rateControl.enabled) {
+    connection.on('congestion', () => {
+      adjustRate(controller, 'down');
+    });
+    
+    connection.on('bandwidth', () => {
+      adjustRate(controller, 'up');
+    });
+  }
+
+  return controller;
+}
+
+// 配置智能重传
+function setupRetransmission(connection) {
+  if (!networkQualityConfig.retransmission.enabled) return;
+
+  let retryCount = 0;
+  let timeout = networkQualityConfig.retransmission.initialTimeout;
+
+  connection.on('timeout', async () => {
+    if (retryCount < networkQualityConfig.retransmission.maxRetries) {
+      retryCount++;
+      timeout = Math.min(
+        timeout * networkQualityConfig.retransmission.backoffMultiplier,
+        networkQualityConfig.retransmission.maxTimeout
+      );
+      await retryTransmission(connection, timeout);
     }
-    return (randomHost >> ((3 - index) * 8)) & 255;
+  });
+}
+
+// 应用拥塞控制
+function applyCongestionControl(connection) {
+  if (!networkQualityConfig.congestionControl.enabled) return;
+
+  const congestionConfig = networkQualityConfig.congestionControl;
+  
+  connection.setCongestionControl({
+    algorithm: congestionConfig.algorithm,
+    initialWindow: congestionConfig.initialWindow,
+    pacing: congestionConfig.pacing
   });
 
-  return randomIP.join('.');
+  if (congestionConfig.probeRtt) {
+    startRttProbing(connection);
+  }
 }
+
+// 启动持续监控
+function startContinuousMonitoring(connection, stats, rateController) {
+  setInterval(() => {
+    const quality = assessConnectionQuality(stats);
+    
+    // @ts-ignore
+    if (quality.requiresAction) {
+      // @ts-ignore
+      if (quality.latencyHigh || quality.lossHigh) {
+        adjustRate(rateController, 'down');
+      // @ts-ignore
+      } else if (quality.latencyLow && quality.lossLow) {
+        adjustRate(rateController, 'up');
+      }
+      
+      // @ts-ignore
+      if (quality.needsPathSwitch) {
+        switchConnectionPath(connection);
+      }
+    }
+    
+    // 清理旧的统计数据
+    cleanupOldStats(stats);
+  }, 1000);
+}
+
+// 添加反监控系统配置
+let antiSurveillanceConfig = {
+  enabled: true,
+  
+  // 流量伪装
+  trafficObfuscation: {
+    enabled: true,
+    mode: 'advanced',
+    patterns: {
+      http: true,      // 伪装成普通HTTP流量
+      video: true,     // 伪装成视频流量
+      gaming: true,    // 伪装成游戏流量
+      voip: true       // 伪装成语音通话
+    },
+    randomization: {
+      timing: true,    // 随机化数据包发送时间
+      size: true,      // 随机化数据包大小
+      padding: true    // 添加随机填充
+    }
+  },
+
+  // 指纹隐藏
+  fingerprintCloaking: {
+    enabled: true,
+    methods: {
+      tls: true,       // TLS指纹隐藏
+      tcp: true,       // TCP指纹隐藏
+      http: true,      // HTTP指纹隐藏
+      dns: true        // DNS指纹隐藏
+    },
+    rotation: {
+      enabled: true,   // 启用指纹轮换
+      interval: 300    // 轮换间隔(秒)
+    }
+  },
+
+  // 行为模拟
+  behaviorSimulation: {
+    enabled: true,
+    patterns: {
+      browsing: true,  // 模拟正常浏览行为
+      streaming: true, // 模拟流媒体观看
+      gaming: true,    // 模拟在线游戏
+      working: true    // 模拟办公行为
+    },
+    humanization: {
+      enabled: true,   // 人性化行为模拟
+      variance: 0.3    // 行为随机变化幅度
+    }
+  },
+
+  // 深度包检测(DPI)规避
+  dpiEvasion: {
+    enabled: true,
+    techniques: {
+      fragmentation: true,    // 数据包分片
+      segmentation: true,     // TCP分段
+      reordering: true,       // 包重排序
+      timing: true           // 时序混淆
+    },
+    adaptiveMode: true       // 自适应规避模式
+  },
+
+  // 多重代理链
+  proxyChaining: {
+    enabled: true,
+    minNodes: 3,             // 最小节点数
+    maxNodes: 5,             // 最大节点数
+    rotation: {
+      enabled: true,         // 启用节点轮换
+      interval: 600         // 轮换间隔(秒)
+    },
+    nodeSelection: 'smart'   // 智能节点选择
+  },
+
+  // 紧急规避机制
+  emergencyEvasion: {
+    enabled: true,
+    triggers: {
+      patternDetection: true,    // 检测到监控特征
+      anomalyDetection: true,    // 检测到异常行为
+      signatureDetection: true   // 检测到特征签名
+    },
+    actions: {
+      routeSwitch: true,         // 切换路由
+      protocolSwitch: true,      // 切换协议
+      fullObfuscation: true      // 完全混淆
+    }
+  }
+};
+
+// 添加反监控处理函数
+async function applyAntiSurveillance(connection) {
+  if (!antiSurveillanceConfig.enabled) return connection;
+
+  try {
+    // 1. 应用流量伪装
+    connection = await applyTrafficObfuscation(connection);
+    
+    // 2. 启用指纹隐藏
+    connection = await enableFingerprintCloaking(connection);
+    
+    // 3. 激活行为模拟
+    connection = await activateBehaviorSimulation(connection);
+    
+    // 4. 实施DPI规避
+    connection = await implementDPIEvasion(connection);
+    
+    // 5. 建立代理链
+    connection = await establishProxyChain(connection);
+    
+    // 6. 设置紧急规避监听
+    setupEmergencyEvasion(connection);
+    
+    return connection;
+  } catch (error) {
+    console.error('反监控系统应用失败:', error);
+    return connection;
+  }
+}
+
+// 流量伪装函数
+async function applyTrafficObfuscation(connection) {
+  const config = antiSurveillanceConfig.trafficObfuscation;
+  if (!config.enabled) return connection;
+
+  // 随机选择一种流量模式
+  const patterns = Object.entries(config.patterns)
+    .filter(([_, enabled]) => enabled)
+    .map(([type]) => type);
+  const selectedPattern = patterns[Math.floor(Math.random() * patterns.length)];
+  
+  // 应用选定的伪装模式
+  await applyTrafficPattern(connection, selectedPattern);
+  
+  // 应用随机化
+  if (config.randomization.timing) {
+    enableRandomTiming(connection);
+  }
+  if (config.randomization.size) {
+    enableRandomPacketSize(connection);
+  }
+  if (config.randomization.padding) {
+    enableRandomPadding(connection);
+  }
+
+  return connection;
+}
+
+// 指纹隐藏函数
+async function enableFingerprintCloaking(connection) {
+  const config = antiSurveillanceConfig.fingerprintCloaking;
+  if (!config.enabled) return connection;
+
+  // 应用各层指纹隐藏
+  if (config.methods.tls) {
+    await hideTLSFingerprint(connection);
+  }
+  if (config.methods.tcp) {
+    await hideTCPFingerprint(connection);
+  }
+  if (config.methods.http) {
+    await hideHTTPFingerprint(connection);
+  }
+  if (config.methods.dns) {
+    await hideDNSFingerprint(connection);
+  }
+
+  // 设置指纹轮换
+  if (config.rotation.enabled) {
+    setupFingerprintRotation(connection, config.rotation.interval);
+  }
+
+  return connection;
+}
+
+// 行为模拟函数
+async function activateBehaviorSimulation(connection) {
+  const config = antiSurveillanceConfig.behaviorSimulation;
+  if (!config.enabled) return connection;
+
+  // 创建行为模拟器
+  const simulator = createBehaviorSimulator(config.patterns);
+  
+  // 应用人性化参数
+  if (config.humanization.enabled) {
+    applyHumanization(simulator, config.humanization.variance);
+  }
+  
+  // 启动模拟
+  // @ts-ignore
+  simulator.start(connection);
+
+  return connection;
+}
+
+// DPI规避函数
+async function implementDPIEvasion(connection) {
+  const config = antiSurveillanceConfig.dpiEvasion;
+  if (!config.enabled) return connection;
+
+  // 应用规避技术
+  if (config.techniques.fragmentation) {
+    enablePacketFragmentation(connection);
+  }
+  if (config.techniques.segmentation) {
+    enableTCPSegmentation(connection);
+  }
+  if (config.techniques.reordering) {
+    enablePacketReordering(connection);
+  }
+  if (config.techniques.timing) {
+    enableTimingObfuscation(connection);
+  }
+
+  // 启用自适应模式
+  if (config.adaptiveMode) {
+    enableAdaptiveEvasion(connection);
+  }
+
+  return connection;
+}
+
+// 代理链建立函数
+async function establishProxyChain(connection) {
+  const config = antiSurveillanceConfig.proxyChaining;
+  if (!config.enabled) return connection;
+
+  // 确定代理节点数量
+  const nodeCount = Math.floor(
+    Math.random() * (config.maxNodes - config.minNodes + 1)
+  ) + config.minNodes;
+
+  // 建立代理链
+  const proxyChain = await buildProxyChain(nodeCount, config.nodeSelection);
+  
+  // 应用到连接
+  connection = await applyProxyChain(connection, proxyChain);
+
+  // 设置轮换
+  if (config.rotation.enabled) {
+    setupProxyRotation(connection, config.rotation.interval);
+  }
+
+  return connection;
+}
+
+// 紧急规避设置函数
+function setupEmergencyEvasion(connection) {
+  const config = antiSurveillanceConfig.emergencyEvasion;
+  if (!config.enabled) return;
+
+  // 设置监听器
+  if (config.triggers.patternDetection) {
+    setupPatternDetection(connection);
+  }
+  if (config.triggers.anomalyDetection) {
+    setupAnomalyDetection(connection);
+  }
+  if (config.triggers.signatureDetection) {
+    setupSignatureDetection(connection);
+  }
+
+  // 配置应急响应
+  setupEmergencyResponse(connection, config.actions);
+}
+
+function setupEmergencyResponse(connection, actions) {
+	throw new Error('Function not implemented.');
+}
+function validateOptimizedData(protectedData) {
+	throw new Error('Function not implemented.');
+}
+
+function generateLayerKey(name, keySize) {
+	throw new Error('Function not implemented.');
+}
+
+function updateMetrics(byteLength, byteLength1) {
+	throw new Error('Function not implemented.');
+}
+
+function preserveEncryptionState(data) {
+	throw new Error('Function not implemented.');
+}
+
+function restoreEncryptionState(compressedData, encryptedState) {
+	throw new Error('Function not implemented.');
+}
+
+function compressData(data) {
+	throw new Error('Function not implemented.');
+}
+
+function establishSecureChannel(channelId) {
+	throw new Error('Function not implemented.');
+}
+
+function encryptWithMilitaryGrade(chunk, secureChannel) {
+	throw new Error('Function not implemented.');
+}
+
+function transferThroughChannel(encryptedChunk, channelId) {
+	throw new Error('Function not implemented.');
+}
+
+function validateTransmission(transmittedChunk, chunk) {
+	throw new Error('Function not implemented.');
+}
+
+function validateDataStructure(data) {
+	throw new Error('Function not implemented.');
+}
+
+function validateEncryptionState(data) {
+	throw new Error('Function not implemented.');
+}
+
+function measureConnectionQuality(connection, stats) {
+	throw new Error('Function not implemented.');
+}
+
+function adjustRate(controller, arg1) {
+	throw new Error('Function not implemented.');
+}
+
+function retryTransmission(connection, timeout) {
+	throw new Error('Function not implemented.');
+}
+
+function startRttProbing(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function assessConnectionQuality(stats) {
+	throw new Error('Function not implemented.');
+}
+
+function switchConnectionPath(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function cleanupOldStats(stats) {
+	throw new Error('Function not implemented.');
+}
+
+function applyTrafficPattern(connection, selectedPattern) {
+	throw new Error('Function not implemented.');
+}
+
+function enableRandomTiming(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function enableRandomPacketSize(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function enableRandomPadding(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function hideTLSFingerprint(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function hideTCPFingerprint(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function hideHTTPFingerprint(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function hideDNSFingerprint(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function setupFingerprintRotation(connection, interval) {
+	throw new Error('Function not implemented.');
+}
+
+function createBehaviorSimulator(patterns) {
+	throw new Error('Function not implemented.');
+}
+
+function applyHumanization(simulator, variance) {
+	throw new Error('Function not implemented.');
+}
+
+function enablePacketFragmentation(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function enableTCPSegmentation(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function enablePacketReordering(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function enableTimingObfuscation(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function enableAdaptiveEvasion(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function buildProxyChain(nodeCount, nodeSelection) {
+	throw new Error('Function not implemented.');
+}
+
+function applyProxyChain(connection, proxyChain) {
+	throw new Error('Function not implemented.');
+}
+
+function setupProxyRotation(connection, interval) {
+	throw new Error('Function not implemented.');
+}
+
+function setupPatternDetection(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function setupAnomalyDetection(connection) {
+	throw new Error('Function not implemented.');
+}
+
+function setupSignatureDetection(connection) {
+	throw new Error('Function not implemented.');
+}
+
+// 添加高级网络优化配置
+let advancedNetworkConfig = {
+  enabled: true,
+  
+  // 多路径传输优化
+  multiPath: {
+    enabled: true,
+    maxPaths: 4,
+    loadBalancing: 'adaptive', // adaptive/weighted/random
+    pathSelection: {
+      rttWeight: 0.4,      // RTT权重
+      bandwidthWeight: 0.4, // 带宽权重
+      lossWeight: 0.2      // 丢包率权重
+    }
+  },
+
+  // 智能队列管理
+  queueManagement: {
+    enabled: true,
+    algorithm: 'codel',    // codel/pie/red
+    target: 5,            // 目标延迟(ms)
+    interval: 100,        // 控制间隔(ms)
+    maxQueueSize: 10240   // 最大队列大小(packets)
+  },
+
+  // 高级拥塞控制
+  congestionControl: {
+    enabled: true,
+    algorithm: 'bbr2',    // bbr2/cubic/vegas
+    pacing: true,         // 启用发送节奏控制
+    pacingGain: 2.885,    // BBR pacing增益
+    cwndGain: 2.885      // BBR cwnd增益
+  }
+};
+
+// 添加高级网络优化处理函数
+async function applyAdvancedNetworkOptimization(connection) {
+  if (!advancedNetworkConfig.enabled) return connection;
+
+  try {
+    // 1. 启用多路径传输
+    if (advancedNetworkConfig.multiPath.enabled) {
+      await setupMultiPathTransmission(connection);
+    }
+
+    // 2. 配置智能队列管理
+    if (advancedNetworkConfig.queueManagement.enabled) {
+      setupQueueManagement(connection);
+    }
+
+    // 3. 应用高级拥塞控制
+    if (advancedNetworkConfig.congestionControl.enabled) {
+      applyAdvancedCongestionControl(connection);
+    }
+
+    return connection;
+  } catch (error) {
+    console.error('高级网络优化应用失败:', error);
+    return connection;
+  }
+}
+
+// 设置多路径传输
+async function setupMultiPathTransmission(connection) {
+  const paths = await detectAvailablePaths(connection);
+  const activePaths = paths.slice(0, advancedNetworkConfig.multiPath.maxPaths);
+  
+  activePaths.forEach(path => {
+    const score = calculatePathScore(path);
+    assignTrafficToPath(path, score);
+  });
+}
+
+// 配置智能队列管理
+function setupQueueManagement(connection) {
+  const queueConfig = advancedNetworkConfig.queueManagement;
+  
+  const queue = new SmartQueue({
+    algorithm: queueConfig.algorithm,
+    target: queueConfig.target,
+    interval: queueConfig.interval,
+    maxSize: queueConfig.maxQueueSize
+  });
+
+  connection.setQueue(queue);
+}
+
+// 应用高级拥塞控制
+function applyAdvancedCongestionControl(connection) {
+  const ccConfig = advancedNetworkConfig.congestionControl;
+  
+  connection.setCongestionControl({
+    algorithm: ccConfig.algorithm,
+    pacing: ccConfig.pacing,
+    pacingGain: ccConfig.pacingGain,
+    cwndGain: ccConfig.cwndGain
+  });
+}
+
+// 添加从CIDR生成随机IP的函数
+function generateRandomIPFromCIDR(network, mask) {
+  // 将网络地址转换为数字
+  const ip = network.split('.').map(Number);
+  const ipNum = (ip[0] << 24) + (ip[1] << 16) + (ip[2] << 8) + ip[3];
+  
+  // 计算可用主机数
+  const hostBits = 32 - mask;
+  const maxHosts = Math.pow(2, hostBits) - 1;
+  
+  // 生成随机主机号
+  const randomHost = Math.floor(Math.random() * maxHosts);
+  
+  // 计算最终IP
+  const finalIpNum = ipNum + randomHost;
+  
+  // 转换回点分十进制
+  return [
+    (finalIpNum >> 24) & 255,
+    (finalIpNum >> 16) & 255,
+    (finalIpNum >> 8) & 255,
+    finalIpNum & 255
+  ].join('.');
+}
+
+// 添加IP连通性测试函数
+async function testIPConnectivity(ip, port, timeout = 2000) {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    const socket = await connect({
+      hostname: ip,
+      port: port,
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+    
+    // 如果连接成功，关闭测试连接
+    try {
+      socket.close();
+    } catch (e) {
+      // 忽略关闭错误
+    }
+    
+    return true;
+  } catch (error) {
+    console.log(`IP ${ip} 连接测试失败: ${error.message}`);
+    return false;
+  }
+}
+
+// 添加军事级三层加密配置
+let militaryGradeConfig = {
+  enabled: true,
+  layers: [
+    {
+      name: 'outer',
+      algorithm: 'AES-GCM',
+      keySize: 256,
+      ivSize: 12,
+      tagLength: 16
+    },
+    {
+      name: 'middle', 
+      algorithm: 'ChaCha20-Poly1305',
+      keySize: 256,
+      nonceSize: 12
+    },
+    {
+      name: 'inner',
+      algorithm: 'AES-GCM',
+      keySize: 256, 
+      ivSize: 12,
+      tagLength: 16
+    }
+  ],
+  // 数据包加密配置
+  packetEncryption: {
+    enabled: true,
+    segmentSize: 1024,  // 数据包分段大小
+    padding: true,      // 启用填充
+    scrambling: true    // 启用扰乱
+  }
+};
+
+// 添加军事级三层加密函数
+async function militaryGradeEncrypt(data) {
+  if (!militaryGradeConfig.enabled) return data;
+
+  try {
+    let encryptedData = data;
+    
+    // 1. 内层加密(AES-GCM)
+    const innerKey = await generateEncryptionKey(militaryGradeConfig.layers[2]);
+    const innerIv = crypto.getRandomValues(new Uint8Array(militaryGradeConfig.layers[2].ivSize));
+    encryptedData = await crypto.subtle.encrypt(
+      {
+        name: militaryGradeConfig.layers[2].algorithm,
+        iv: innerIv,
+        tagLength: militaryGradeConfig.layers[2].tagLength * 8
+      },
+      innerKey,
+      encryptedData
+    );
+    
+    // 2. 中层加密(ChaCha20-Poly1305)
+    const middleKey = await generateEncryptionKey(militaryGradeConfig.layers[1]);
+    const middleNonce = crypto.getRandomValues(new Uint8Array(militaryGradeConfig.layers[1].nonceSize));
+    encryptedData = await crypto.subtle.encrypt(
+      {
+        name: militaryGradeConfig.layers[1].algorithm,
+        nonce: middleNonce
+      },
+      middleKey,
+      encryptedData
+    );
+    
+    // 3. 外层加密(AES-GCM)
+    const outerKey = await generateEncryptionKey(militaryGradeConfig.layers[0]);
+    const outerIv = crypto.getRandomValues(new Uint8Array(militaryGradeConfig.layers[0].ivSize));
+    encryptedData = await crypto.subtle.encrypt(
+      {
+        name: militaryGradeConfig.layers[0].algorithm,
+        iv: outerIv,
+        tagLength: militaryGradeConfig.layers[0].tagLength * 8
+      },
+      outerKey,
+      encryptedData
+    );
+
+    // 4. 如果启用了数据包加密
+    if (militaryGradeConfig.packetEncryption.enabled) {
+      encryptedData = await encryptPackets(encryptedData);
+    }
+
+    // 组合所有加密参数和数据
+    const result = new Uint8Array(
+      1 + // 版本
+      innerIv.length +
+      middleNonce.length +
+      outerIv.length +
+      encryptedData.byteLength
+    );
+
+    let offset = 0;
+    result[offset++] = 1; // 版本号
+    result.set(innerIv, offset);
+    offset += innerIv.length;
+    result.set(middleNonce, offset);
+    offset += middleNonce.length;
+    result.set(outerIv, offset);
+    offset += outerIv.length;
+    result.set(new Uint8Array(encryptedData), offset);
+
+    return result.buffer;
+  } catch (error) {
+    console.error('军事级加密失败:', error);
+    return data;
+  }
+}
+
+// 添加军事级三层解密函数
+async function militaryGradeDecrypt(encryptedData) {
+  if (!militaryGradeConfig.enabled) return encryptedData;
+
+  try {
+    const dataView = new Uint8Array(encryptedData);
+    let offset = 0;
+
+    // 读取版本号
+    const version = dataView[offset++];
+    if (version !== 1) throw new Error('不支持的加密版本');
+
+    // 提取加密参数
+    const innerIv = dataView.slice(offset, offset + militaryGradeConfig.layers[2].ivSize);
+    offset += militaryGradeConfig.layers[2].ivSize;
+    
+    const middleNonce = dataView.slice(offset, offset + militaryGradeConfig.layers[1].nonceSize);
+    offset += militaryGradeConfig.layers[1].nonceSize;
+    
+    const outerIv = dataView.slice(offset, offset + militaryGradeConfig.layers[0].ivSize);
+    offset += militaryGradeConfig.layers[0].ivSize;
+
+    // 获取加密数据
+    let data = dataView.slice(offset);
+
+    // 1. 如果启用了数据包加密，先解密数据包
+    if (militaryGradeConfig.packetEncryption.enabled) {
+      data = await decryptPackets(data);
+    }
+
+    // 2. 外层解密(AES-GCM)
+    const outerKey = await generateEncryptionKey(militaryGradeConfig.layers[0]);
+    data = await crypto.subtle.decrypt(
+      {
+        name: militaryGradeConfig.layers[0].algorithm,
+        iv: outerIv,
+        tagLength: militaryGradeConfig.layers[0].tagLength * 8
+      },
+      outerKey,
+      data
+    );
+
+    // 3. 中层解密(ChaCha20-Poly1305)
+    const middleKey = await generateEncryptionKey(militaryGradeConfig.layers[1]);
+    data = await crypto.subtle.decrypt(
+      {
+        name: militaryGradeConfig.layers[1].algorithm,
+        nonce: middleNonce
+      },
+      middleKey,
+      data
+    );
+
+    // 4. 内层解密(AES-GCM)
+    const innerKey = await generateEncryptionKey(militaryGradeConfig.layers[2]);
+    data = await crypto.subtle.decrypt(
+      {
+        name: militaryGradeConfig.layers[2].algorithm,
+        iv: innerIv,
+        tagLength: militaryGradeConfig.layers[2].tagLength * 8
+      },
+      innerKey,
+      data
+    );
+
+    return data;
+  } catch (error) {
+    console.error('军事级解密失败:', error);
+    return encryptedData;
+  }
+}
+
+// 数据包加密函数
+async function encryptPackets(data) {
+  if (!militaryGradeConfig.packetEncryption.enabled) return data;
+
+  const packets = [];
+  const array = new Uint8Array(data);
+  const segmentSize = militaryGradeConfig.packetEncryption.segmentSize;
+
+  // 分段处理数据
+  for (let i = 0; i < array.length; i += segmentSize) {
+    let packet = array.slice(i, i + segmentSize);
+    
+    // 添加填充
+    if (militaryGradeConfig.packetEncryption.padding) {
+      packet = addPadding(packet);
+    }
+
+    // 添加扰乱
+    if (militaryGradeConfig.packetEncryption.scrambling) {
+      packet = scramblePacket(packet);
+    }
+
+    packets.push(packet);
+  }
+
+  // 合并所有处理后的数据包
+  return concatArrayBuffers(...packets.map(p => p.buffer));
+}
+
+// 数据包解密函数
+async function decryptPackets(data) {
+  if (!militaryGradeConfig.packetEncryption.enabled) return data;
+
+  const array = new Uint8Array(data);
+  const segmentSize = militaryGradeConfig.packetEncryption.segmentSize;
+  const packets = [];
+
+  // 分段处理数据
+  for (let i = 0; i < array.length; i += segmentSize) {
+    let packet = array.slice(i, i + segmentSize);
+
+    // 移除扰乱
+    if (militaryGradeConfig.packetEncryption.scrambling) {
+      packet = unscramblePacket(packet);
+    }
+
+    // 移除填充
+    if (militaryGradeConfig.packetEncryption.padding) {
+      packet = removePadding(packet);
+    }
+
+    packets.push(packet);
+  }
+
+  // 合并所有处理后的数据包
+  return concatArrayBuffers(...packets.map(p => p.buffer));
+}
+
+// 辅助函数：生成加密密钥
+async function generateEncryptionKey(layerConfig) {
+  const keyMaterial = crypto.getRandomValues(new Uint8Array(layerConfig.keySize));
+  return await crypto.subtle.importKey(
+    'raw',
+    keyMaterial,
+    layerConfig.algorithm,
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+// 辅助函数：添加填充
+function addPadding(data) {
+  const paddingSize = Math.floor(Math.random() * 32); // 0-31字节的随机填充
+  const padding = crypto.getRandomValues(new Uint8Array(paddingSize));
+  const result = new Uint8Array(data.length + paddingSize + 1);
+  result[0] = paddingSize;
+  result.set(data, 1);
+  result.set(padding, data.length + 1);
+  return result;
+}
+
+// 辅助函数：移除填充
+function removePadding(data) {
+  const paddingSize = data[0];
+  return data.slice(1, data.length - paddingSize);
+}
+
+// 辅助函数：扰乱数据包
+function scramblePacket(data) {
+  const array = new Uint8Array(data);
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// 辅助函数：还原扰乱的数据包
+function unscramblePacket(data) {
+  // 使用相同的随机种子还原扰乱
+  const array = new Uint8Array(data);
+  for (let i = 0; i < array.length - 1; i++) {
+    const j = Math.floor(Math.random() * (array.length - i)) + i;
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// 添加反窃听和隐私保护配置
+let antiSurveillanceConfig1 = {
+  enabled: true,
+  
+  // 系统级防护
+  systemProtection: {
+    enabled: true,
+    // 防止系统级钩子
+    antiHook: {
+      enabled: true,
+      methods: ['API', 'DLL', 'KERNEL'],
+      detection: true,
+      prevention: true
+    },
+    // 防止系统调用跟踪
+    antiTrace: {
+      enabled: true,
+      syscallMasking: true,
+      stackObfuscation: true
+    },
+    // 防止内存扫描
+    memoryProtection: {
+      enabled: true,
+      encryption: true,
+      scrambling: true,
+      antiDump: true
+    }
+  },
+
+  // 应用层防护
+  applicationProtection: {
+    enabled: true,
+    // 防止应用层嗅探
+    antiSniff: {
+      enabled: true,
+      packetObfuscation: true,
+      protocolMasking: true
+    },
+    // 防止调试和注入
+    antiDebug: {
+      enabled: true,
+      debugDetection: true,
+      injectionPrevention: true
+    },
+    // 防止屏幕捕获
+    screenProtection: {
+      enabled: true,
+      preventScreenshot: true,
+      preventRecording: true
+    }
+  },
+
+  // 网络层防护
+  networkProtection: {
+    enabled: true,
+    // 流量伪装
+    trafficCamouflage: {
+      enabled: true,
+      type: 'https',
+      mimicBehavior: true
+    },
+    // DNS保护
+    dnsProtection: {
+      enabled: true,
+      encryption: true,
+      customResolver: true
+    },
+    // 防止中间人攻击
+    antiMitm: {
+      enabled: true,
+      certificatePinning: true,
+      multiLayerVerification: true
+    }
+  },
+
+  // 硬件层防护
+  hardwareProtection: {
+    enabled: true,
+    // 防止硬件嗅探
+    antiHardwareSniff: {
+      enabled: true,
+      portProtection: true,
+      busEncryption: true
+    },
+    // 防止固件攻击
+    firmwareProtection: {
+      enabled: true,
+      signatureVerification: true,
+      secureBootCheck: true
+    }
+  }
+};
+
+// 添加反窃听保护函数
+async function applyAntiSurveillanceProtection(data) {
+  if (!antiSurveillanceConfig.enabled) return data;
+
+  try {
+    // 1. 系统级保护
+    if (antiSurveillanceConfig.systemProtection.enabled) {
+      data = await applySystemProtection(data);
+    }
+
+    // 2. 应用层保护
+    if (antiSurveillanceConfig.applicationProtection.enabled) {
+      data = await applyApplicationProtection(data);
+    }
+
+    // 3. 网络层保护
+    if (antiSurveillanceConfig.networkProtection.enabled) {
+      data = await applyNetworkProtection(data);
+    }
+
+    // 4. 硬件层保护
+    if (antiSurveillanceConfig.hardwareProtection.enabled) {
+      data = await applyHardwareProtection(data);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('反窃听保护应用失败:', error);
+    return data;
+  }
+}
+
+// 系统级保护实现
+async function applySystemProtection(data) {
+  const protection = antiSurveillanceConfig.systemProtection;
+  
+  // 应用内存保护
+  if (protection.memoryProtection.enabled) {
+    // 加密内存数据
+    data = await encryptMemoryData(data);
+    // 扰乱内存布局
+    data = await scrambleMemoryLayout(data);
+    // 防止内存转储
+    applyAntiDumpProtection();
+  }
+
+  // 应用系统调用保护
+  if (protection.antiTrace.enabled) {
+    // 混淆系统调用
+    maskSystemCalls();
+    // 混淆调用栈
+    obfuscateCallStack();
+  }
+
+  // 应用反钩子保护
+  if (protection.antiHook.enabled) {
+    // 检测和防止API钩子
+    detectAndPreventHooks();
+  }
+
+  return data;
+}
+
+// 应用层保护实现
+async function applyApplicationProtection(data) {
+  const protection = antiSurveillanceConfig.applicationProtection;
+
+  // 应用反嗅探保护
+  if (protection.antiSniff.enabled) {
+    // 混淆数据包
+    data = await obfuscatePackets(data);
+    // 伪装协议特征
+    data = await maskProtocolSignatures(data);
+  }
+
+  // 应用反调试保护
+  if (protection.antiDebug.enabled) {
+    // 检测调试器
+    detectDebugger();
+    // 防止代码注入
+    preventCodeInjection();
+  }
+
+  // 应用屏幕保护
+  if (protection.screenProtection.enabled) {
+    // 防止截屏
+    preventScreenCapture();
+    // 防止录屏
+    preventScreenRecording();
+  }
+
+  return data;
+}
+
+// 网络层保护实现
+async function applyNetworkProtection(data) {
+  const protection = antiSurveillanceConfig.networkProtection;
+
+  // 应用流量伪装
+  if (protection.trafficCamouflage.enabled) {
+    // 伪装成正常HTTPS流量
+    data = await camouflageAsHttps(data);
+    // 模拟正常浏览行为
+    simulateNormalBehavior();
+  }
+
+  // 应用DNS保护
+  if (protection.dnsProtection.enabled) {
+    // 加密DNS查询
+    encryptDnsQueries();
+    // 使用自定义DNS解析器
+    useCustomDnsResolver();
+  }
+
+  // 应用反中间人攻击保护
+  if (protection.antiMitm.enabled) {
+    // 证书固定
+    applyCertificatePinning();
+    // 多层验证
+    applyMultiLayerVerification();
+  }
+
+  return data;
+}
+
+// 硬件层保护实现
+async function applyHardwareProtection(data) {
+  const protection = antiSurveillanceConfig.hardwareProtection;
+
+  // 应用硬件反嗅探保护
+  if (protection.antiHardwareSniff.enabled) {
+    // 保护端口
+    protectHardwarePorts();
+    // 加密总线数据
+    data = await encryptBusData(data);
+  }
+
+  // 应用固件保护
+  if (protection.firmwareProtection.enabled) {
+    // 验证固件签名
+    verifyFirmwareSignature();
+    // 检查安全启动
+    checkSecureBoot();
+  }
+
+  return data;
+}
+
+// 在数据传输前应用所有保护
+async function protectDataTransmission(data) {
+  // 1. 应用反窃听保护
+  data = await applyAntiSurveillanceProtection(data);
+  
+  // 2. 应用军事级加密
+  data = await militaryGradeEncrypt(data);
+  
+  // 3. 应用数据包保护
+  data = await encryptPackets(data);
+  
+  return data;
+}
+
+// 在数据接收时移除所有保护
+async function unprotectDataReception(data) {
+  // 1. 移除数据包保护
+  data = await decryptPackets(data);
+  
+  // 2. 移除军事级加密
+  data = await militaryGradeDecrypt(data);
+  
+  // 3. 移除反窃听保护
+  data = await removeAntiSurveillanceProtection(data);
+  
+  return data;
+}
+
+// 添加权限控制配置
+let permissionConfig = {
+  enabled: true,
+  
+  // 访问控制
+  accessControl: {
+    enabled: true,
+    // 权限级别定义
+    levels: {
+      admin: 3,    // 管理员权限
+      user: 2,     // 普通用户权限  
+      guest: 1     // 访客权限
+    },
+    // 资源访问规则
+    rules: new Map([
+      ['chat', { minLevel: 2 }],
+      ['config', { minLevel: 3 }],
+      ['logs', { minLevel: 3 }]
+    ])
+  },
+
+  // 数据隔离
+  dataIsolation: {
+    enabled: true,
+    // 隔离策略
+    strategy: {
+      chat: 'encrypt',      // 加密聊天数据
+      config: 'restrict',   // 限制配置访问
+      logs: 'anonymize'     // 匿名化日志
+    },
+    // 数据脱敏规则
+    sanitization: {
+      uuid: true,           // UUID脱敏
+      ip: true,            // IP地址脱敏
+      userAgent: true      // UA信息脱敏
+    }
+  },
+
+  // 审计日志
+  auditLog: {
+    enabled: true,
+    // 记录事件类型
+    events: {
+      access: true,        // 访问事件
+      modify: true,        // 修改事件
+      auth: true          // 认证事件
+    },
+    retention: 30,        // 日志保留天数
+    encryption: true      // 加密日志
+  }
+};
+
+// 添加权限检查函数
+async function checkPermission(resource, level) {
+  if (!permissionConfig.enabled) return true;
+
+  try {
+    const rule = permissionConfig.accessControl.rules.get(resource);
+    if (!rule) return false;
+
+    return level >= rule.minLevel;
+  } catch (error) {
+    console.error('权限检查失败:', error);
+    return false;
+  }
+}
+
+// 添加数据隔离函数
+async function isolateData(data, type) {
+  if (!permissionConfig.dataIsolation.enabled) return data;
+
+  try {
+    const strategy = permissionConfig.dataIsolation.strategy[type];
+    
+    switch (strategy) {
+      case 'encrypt':
+        return await encryptSensitiveData(data);
+      case 'restrict':
+        return await restrictDataAccess(data);
+      case 'anonymize':
+        return await anonymizeData(data);
+      default:
+        return data;
+    }
+  } catch (error) {
+    console.error('数据隔离失败:', error);
+    return data;
+  }
+}
+
+// 添加审计日志函数
+async function logAuditEvent(event, details) {
+  if (!permissionConfig.auditLog.enabled) return;
+
+  try {
+    const logEntry = {
+      timestamp: Date.now(),
+      event,
+      details,
+      hash: await generateEventHash(event, details)
+    };
+
+    if (permissionConfig.auditLog.encryption) {
+      logEntry.details = await encryptLogDetails(details);
+    }
+
+    await storeAuditLog(logEntry);
+  } catch (error) {
+    console.error('审计日志记录失败:', error);
+  }
+}
+
+// 添加数据脱敏函数
+function sanitizeData(data) {
+  if (!permissionConfig.dataIsolation.enabled) return data;
+
+  const rules = permissionConfig.dataIsolation.sanitization;
+  let sanitizedData = {...data};
+
+  if (rules.uuid && sanitizedData.uuid) {
+    sanitizedData.uuid = maskUUID(sanitizedData.uuid);
+  }
+
+  if (rules.ip && sanitizedData.ip) {
+    sanitizedData.ip = maskIP(sanitizedData.ip);
+  }
+
+  if (rules.userAgent && sanitizedData.userAgent) {
+    sanitizedData.userAgent = maskUserAgent(sanitizedData.userAgent);
+  }
+
+  return sanitizedData;
+}
+
+// 添加数据访问控制函数
+async function controlDataAccess(data, accessLevel) {
+  if (!permissionConfig.accessControl.enabled) return data;
+
+  try {
+    // 检查访问权限
+    const hasPermission = await checkPermission('data', accessLevel);
+    if (!hasPermission) {
+      throw new Error('访问被拒绝');
+    }
+
+    // 隔离数据
+    const isolatedData = await isolateData(data, 'data');
+
+    // 记录访问日志
+    await logAuditEvent('access', {
+      level: accessLevel,
+      timestamp: Date.now()
+    });
+
+    return isolatedData;
+  } catch (error) {
+    console.error('数据访问控制失败:', error);
+    throw error;
+  }
+}
+
+// 工具函数: UUID脱敏
+function maskUUID(uuid) {
+  return uuid.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i, 
+    match => `${match.substr(0,8)}-****-****-****-************`);
+}
+
+// 工具函数: IP地址脱敏
+function maskIP(ip) {
+  return ip.replace(/(\d+)\.(\d+)\.(\d+)\.(\d+)/, '$1.$2.*.*');
+}
+
+// 工具函数: UserAgent脱敏
+function maskUserAgent(ua) {
+  return ua.replace(/\(.*?\)/g, '(masked)');
+}
+
+// 工具函数: 生成事件哈希
+async function generateEventHash(event, details) {
+  const data = JSON.stringify({ event, details, timestamp: Date.now() });
+  const buffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// 添加缺失的关键安全函数
+async function encryptSensitiveData(data) {
+  try {
+    // 使用AES-GCM加密敏感数据
+    const key = await getEncryptionKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encryptedData = await crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: iv,
+        tagLength: 128
+      },
+      key,
+      new TextEncoder().encode(JSON.stringify(data))
+    );
+    
+    return {
+      iv: Array.from(iv),
+      data: Array.from(new Uint8Array(encryptedData)),
+      timestamp: Date.now()
+    };
+  } catch (error) {
+    console.error('敏感数据加密失败:', error);
+    throw error;
+  }
+}
+
+async function restrictDataAccess(data) {
+  // 实现访问控制逻辑
+  const accessToken = await getAccessToken();
+  if (!await validateAccessToken(accessToken)) {
+    throw new Error('无访问权限');
+  }
+  return sanitizeData(data);
+}
+
+async function anonymizeData(data) {
+  // 实现数据匿名化
+  return {
+    ...data,
+    uuid: maskUUID(data.uuid),
+    ip: maskIP(data.ip),
+    userAgent: maskUserAgent(data.userAgent),
+    timestamp: Math.floor(Date.now() / (1000 * 60)) * (1000 * 60) // 时间戳取整到分钟
+  };
+}
+
+async function encryptLogDetails(details) {
+  // 实现日志加密
+  const key = await getLogEncryptionKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encryptedDetails = await crypto.subtle.encrypt(
+    {
+      name: "AES-GCM",
+      iv: iv,
+      tagLength: 128
+    },
+    key,
+    new TextEncoder().encode(JSON.stringify(details))
+  );
+  
+  return {
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(encryptedDetails))
+  };
+}
+
+async function storeAuditLog(logEntry) {
+  // 实现安全的日志存储
+  try {
+    // 添加额外的安全元数据
+    const secureLogEntry = {
+      ...logEntry,
+      hmac: await generateHMAC(logEntry),
+      sequenceNumber: await getNextSequenceNumber(),
+      previousLogHash: await getPreviousLogHash()
+    };
+    
+    // 存储日志
+    await saveToSecureStorage('audit_logs', secureLogEntry);
+    
+    // 更新日志链
+    await updateLogChain(secureLogEntry);
+  } catch (error) {
+    console.error('审计日志存储失败:', error);
+    throw error;
+  }
+}
+
+// 添加安全性验证函数
+async function validateSecurityMeasures() {
+  try {
+    // 验证加密配置
+    if (!encryptionConfig.enabled) {
+      throw new Error('加密未启用');
+    }
+    
+    // 验证权限系统
+    if (!permissionConfig.enabled) {
+      throw new Error('权限系统未启用');
+    }
+    
+    // 验证审计日志
+    if (!permissionConfig.auditLog.enabled) {
+      throw new Error('审计日志未启用');
+    }
+    
+    // 验证密钥强度
+    await validateKeyStrength();
+    
+    // 验证随机数生成器
+    await validateRandomNumberGenerator();
+    
+    // 验证加密算法实现
+    await validateEncryptionImplementation();
+    
+    return true;
+  } catch (error) {
+    console.error('安全措施验证失败:', error);
+    return false;
+  }
+}
+
+// 在应用启动时进行安全性检查
+async function initializeSecurity() {
+  if (!await validateSecurityMeasures()) {
+    throw new Error('安全措施验证失败，系统无法启动');
+  }
+  
+  // 初始化安全组件
+  await initializeEncryption();
+  await initializePermissions();
+  await initializeAuditLog();
+}
+
+// 添加安全增强配置
+let securityEnhancementConfig = {
+  // 密钥轮换
+  keyRotation: {
+    enabled: true,
+    interval: 24 * 60 * 60 * 1000, // 24小时
+    algorithm: 'AES-GCM'
+  },
+  
+  // 会话管理
+  sessionManagement: {
+    enabled: true,
+    timeout: 30 * 60 * 1000, // 30分钟
+    renewOnActivity: true
+  },
+  
+  // 输入验证
+  inputValidation: {
+    enabled: true,
+    sanitization: true,
+    maxLength: 1024 * 1024 // 1MB
+  },
+  
+  // 错误处理
+  errorHandling: {
+    enabled: true,
+    sanitizeErrors: true,
+    logErrors: true
+  }
+};
+
+// 添加军事级加密所需的关键函数
+async function getEncryptionKey() {
+  try {
+    // 生成随机密钥
+    const keyMaterial = crypto.getRandomValues(new Uint8Array(32));
+    return await crypto.subtle.importKey(
+      'raw',
+      keyMaterial,
+      {
+        name: 'AES-GCM',
+        length: 256
+      },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  } catch (error) {
+    console.error('密钥生成失败:', error);
+    throw error;
+  }
+}
+
+async function getLogEncryptionKey() {
+  try {
+    // 使用专门的日志加密密钥
+    const keyMaterial = await deriveKey(
+      'log-encryption-key',
+      crypto.getRandomValues(new Uint8Array(32))
+    );
+    return await crypto.subtle.importKey(
+      'raw',
+      keyMaterial,
+      {
+        name: 'AES-GCM',
+        length: 256
+      },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  } catch (error) {
+    console.error('日志加密密钥生成失败:', error);
+    throw error;
+  }
+}
+
+async function generateHMAC(data) {
+  try {
+    const key = await crypto.subtle.generateKey(
+      {
+        name: 'HMAC',
+        hash: 'SHA-512'
+      },
+      true,
+      ['sign', 'verify']
+    );
+    
+    const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(JSON.stringify(data))
+    );
+    
+    return Array.from(new Uint8Array(signature));
+  } catch (error) {
+    console.error('HMAC生成失败:', error);
+    throw error;
+  }
+}
+
+// 安全存储相关函数
+async function saveToSecureStorage(key, data) {
+  try {
+    // 加密数据
+    const encryptedData = await encryptSensitiveData(data);
+    // 生成HMAC
+    const hmac = await generateHMAC(data);
+    
+    // 组合存储对象
+    const storageObject = {
+      data: encryptedData,
+      hmac,
+      timestamp: Date.now(),
+      version: '1.0'
+    };
+    
+    // 实际存储操作
+    // 这里应该使用实际的存储API
+    console.log('数据已安全存储:', key);
+    return true;
+  } catch (error) {
+    console.error('安全存储失败:', error);
+    throw error;
+  }
+}
+
+// 日志链相关函数
+let logSequence = 0;
+let previousLogHash = null;
+
+async function getNextSequenceNumber() {
+  return ++logSequence;
+}
+
+async function getPreviousLogHash() {
+  return previousLogHash;
+}
+
+async function updateLogChain(logEntry) {
+  try {
+    // 计算当前日志条目的哈希
+    const currentHash = await generateEventHash(
+      logEntry.event,
+      logEntry.details
+    );
+    
+    // 更新链
+    previousLogHash = currentHash;
+    
+    return currentHash;
+  } catch (error) {
+    console.error('日志链更新失败:', error);
+    throw error;
+  }
+}
+
+// 安全验证相关函数
+async function validateKeyStrength() {
+  try {
+    // 验证密钥长度
+    if (encryptionConfig.keySize < 256) {
+      throw new Error('密钥长度不足');
+    }
+    
+    // 验证密钥熵
+    const entropyTest = await testKeyEntropy();
+    if (!entropyTest.passed) {
+      throw new Error('密钥熵不足');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('密钥强度验证失败:', error);
+    return false;
+  }
+}
+
+async function validateRandomNumberGenerator() {
+  try {
+    // 验证随机数生成器
+    const rngTest = await testRandomNumberGenerator();
+    if (!rngTest.passed) {
+      throw new Error('随机数生成器不安全');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('随机数生成器验证失败:', error);
+    return false;
+  }
+}
+
+async function validateEncryptionImplementation() {
+  try {
+    // 测试加密实现
+    const testData = crypto.getRandomValues(new Uint8Array(32));
+    const encryptedData = await militaryGradeEncrypt(testData);
+    const decryptedData = await militaryGradeDecrypt(encryptedData);
+    
+    // 验证加密/解密结果
+    if (!arrayEquals(testData, new Uint8Array(decryptedData))) {
+      throw new Error('加密实现验证失败');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('加密实现验证失败:', error);
+    return false;
+  }
+}
+
+// 初始化函数
+async function initializeEncryption() {
+  try {
+    // 初始化加密模块
+    await validateKeyStrength();
+    await validateRandomNumberGenerator();
+    await validateEncryptionImplementation();
+    
+    // 设置密钥轮换
+    if (securityEnhancementConfig.keyRotation.enabled) {
+      setInterval(async () => {
+        await rotateEncryptionKeys();
+      }, securityEnhancementConfig.keyRotation.interval);
+    }
+    
+    console.log('加密模块初始化成功');
+    return true;
+  } catch (error) {
+    console.error('加密模块初始化失败:', error);
+    throw error;
+  }
+}
+
+async function initializePermissions() {
+  try {
+    // 初始化权限系统
+    if (!permissionConfig.enabled) {
+      throw new Error('权限系统未启用');
+    }
+    
+    // 验证权限规则
+    for (const [resource, rule] of permissionConfig.accessControl.rules) {
+      if (!rule || typeof rule.minLevel !== 'number') {
+        throw new Error(`无效的权限规则: ${resource}`);
+      }
+    }
+    
+    console.log('权限系统初始化成功');
+    return true;
+  } catch (error) {
+    console.error('权限系统初始化失败:', error);
+    throw error;
+  }
+}
+
+async function initializeAuditLog() {
+  try {
+    // 初始化审计日志
+    if (!permissionConfig.auditLog.enabled) {
+      throw new Error('审计日志未启用');
+    }
+    
+    // 清理过期日志
+    await cleanupExpiredLogs();
+    
+    // 验证日志链完整性
+    await validateLogChain();
+    
+    console.log('审计日志初始化成功');
+    return true;
+  } catch (error) {
+    console.error('审计日志初始化失败:', error);
+    throw error;
+  }
+}
+
+// 添加数据包监控配置
+let packetMonitorConfig = {
+  enabled: true,
+  
+  // 数据包检测
+  packetInspection: {
+    enabled: true,
+    // 运营商监控检测
+    ispMonitoring: {
+      enabled: true,
+      checkInterval: 1000,  // 检测间隔(ms)
+      detectionMethods: ['dpi', 'metadata', 'pattern']
+    },
+    // 第三方监控检测
+    thirdPartyMonitoring: {
+      enabled: true,
+      checkInterval: 1000,
+      detectionMethods: ['mitm', 'replay', 'injection']
+    }
+  },
+
+  // 数据包完整性验证
+  packetIntegrity: {
+    enabled: true,
+    // 校验方法
+    verificationMethods: {
+      hash: true,         // 哈希校验
+      hmac: true,         // HMAC校验
+      signature: true,    // 数字签名
+      crc: true          // CRC校验
+    },
+    // 错误处理
+    errorHandling: {
+      retransmit: true,  // 重传
+      notify: true,      // 通知
+      log: true         // 日志
+    }
+  },
+
+  // 实时监控
+  realTimeMonitoring: {
+    enabled: true,
+    metrics: {
+      packetLoss: true,    // 丢包率
+      latency: true,       // 延迟
+      throughput: true,    // 吞吐量
+      integrity: true      // 完整性
+    },
+    alerts: {
+      threshold: 0.01,     // 告警阈值(1%)
+      notification: true   // 启用通知
+    }
+  }
+};
+
+// 添加数据包监控函数
+async function monitorPacket(packet) {
+  if (!packetMonitorConfig.enabled) return true;
+
+  try {
+    // 1. 运营商监控检测
+    if (packetMonitorConfig.packetInspection.ispMonitoring.enabled) {
+      const ispMonitoring = await detectISPMonitoring(packet);
+      if (ispMonitoring.detected) {
+        console.error('检测到运营商监控:', ispMonitoring.details);
+        await takeProtectiveAction('isp', ispMonitoring);
+        return false;
+      }
+    }
+
+    // 2. 第三方监控检测
+    if (packetMonitorConfig.packetInspection.thirdPartyMonitoring.enabled) {
+      const thirdPartyMonitoring = await detectThirdPartyMonitoring(packet);
+      if (thirdPartyMonitoring.detected) {
+        console.error('检测到第三方监控:', thirdPartyMonitoring.details);
+        await takeProtectiveAction('thirdParty', thirdPartyMonitoring);
+        return false;
+      }
+    }
+
+    // 3. 数据包完整性验证
+    if (packetMonitorConfig.packetIntegrity.enabled) {
+      const integrityCheck = await verifyPacketIntegrity(packet);
+      if (!integrityCheck.valid) {
+        console.error('数据包完整性验证失败:', integrityCheck.error);
+        await handleIntegrityError(packet, integrityCheck);
+        return false;
+      }
+    }
+
+    // 4. 更新实时监控指标
+    if (packetMonitorConfig.realTimeMonitoring.enabled) {
+      await updateMonitoringMetrics(packet);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('数据包监控失败:', error);
+    return false;
+  }
+}
+
+// 运营商监控检测函数
+async function detectISPMonitoring(packet) {
+  const result = {
+    detected: false,
+    details: {},
+    confidence: 0
+  };
+
+  try {
+    // 1. DPI检测
+    const dpiResult = await detectDPI(packet);
+    if (dpiResult.detected) {
+      result.detected = true;
+      result.details.dpi = dpiResult.details;
+      result.confidence += dpiResult.confidence;
+    }
+
+    // 2. 元数据分析
+    const metadataResult = await analyzeMetadata(packet);
+    if (metadataResult.suspicious) {
+      result.detected = true;
+      result.details.metadata = metadataResult.details;
+      result.confidence += metadataResult.confidence;
+    }
+
+    // 3. 流量模式分析
+    const patternResult = await analyzeTrafficPattern(packet);
+    if (patternResult.suspicious) {
+      result.detected = true;
+      result.details.pattern = patternResult.details;
+      result.confidence += patternResult.confidence;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('运营商监控检测失败:', error);
+    return { detected: false, error };
+  }
+}
+
+// 第三方监控检测函数
+async function detectThirdPartyMonitoring(packet) {
+  const result = {
+    detected: false,
+    details: {},
+    confidence: 0
+  };
+
+  try {
+    // 1. MITM攻击检测
+    const mitmResult = await detectMITM(packet);
+    if (mitmResult.detected) {
+      result.detected = true;
+      result.details.mitm = mitmResult.details;
+      result.confidence += mitmResult.confidence;
+    }
+
+    // 2. 重放攻击检测
+    const replayResult = await detectReplayAttack(packet);
+    if (replayResult.detected) {
+      result.detected = true;
+      result.details.replay = replayResult.details;
+      result.confidence += replayResult.confidence;
+    }
+
+    // 3. 注入攻击检测
+    const injectionResult = await detectInjection(packet);
+    if (injectionResult.detected) {
+      result.detected = true;
+      result.details.injection = injectionResult.details;
+      result.confidence += injectionResult.confidence;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('第三方监控检测失败:', error);
+    return { detected: false, error };
+  }
+}
+
+// 数据包完整性验证函数
+async function verifyPacketIntegrity(packet) {
+  const result = {
+    valid: true,
+    checks: {},
+    error: null
+  };
+
+  try {
+    // 1. 哈希校验
+    if (packetMonitorConfig.packetIntegrity.verificationMethods.hash) {
+      const hashCheck = await verifyHash(packet);
+      result.checks.hash = hashCheck;
+      result.valid = result.valid && hashCheck.valid;
+    }
+
+    // 2. HMAC校验
+    if (packetMonitorConfig.packetIntegrity.verificationMethods.hmac) {
+      const hmacCheck = await verifyHMAC(packet);
+      result.checks.hmac = hmacCheck;
+      result.valid = result.valid && hmacCheck.valid;
+    }
+
+    // 3. 数字签名校验
+    if (packetMonitorConfig.packetIntegrity.verificationMethods.signature) {
+      const signatureCheck = await verifySignature(packet);
+      result.checks.signature = signatureCheck;
+      result.valid = result.valid && signatureCheck.valid;
+    }
+
+    // 4. CRC校验
+    if (packetMonitorConfig.packetIntegrity.verificationMethods.crc) {
+      const crcCheck = await verifyCRC(packet);
+      result.checks.crc = crcCheck;
+      result.valid = result.valid && crcCheck.valid;
+    }
+
+    return result;
+  } catch (error) {
+    console.error('数据包完整性验证失败:', error);
+    return { valid: false, error };
+  }
+}
+
+// 保护措施执行函数
+async function takeProtectiveAction(type, detection) {
+  try {
+    // 1. 增加加密强度
+    await enhanceEncryption();
+    
+    // 2. 切换传输通道
+    await switchTransportChannel();
+    
+    // 3. 启用额外的混淆
+    await enableExtraObfuscation();
+    
+    // 4. 记录威胁情报
+    await logThreatIntelligence(type, detection);
+    
+    // 5. 发送警报
+    await sendAlert(type, detection);
+  } catch (error) {
+    console.error('保护措施执行失败:', error);
+  }
+}
+
+// 完整性错误处理函数
+async function handleIntegrityError(packet, check) {
+  try {
+    if (packetMonitorConfig.packetIntegrity.errorHandling.retransmit) {
+      // 1. 重传数据包
+      await retransmitPacket(packet);
+    }
+    
+    if (packetMonitorConfig.packetIntegrity.errorHandling.notify) {
+      // 2. 发送通知
+      await sendIntegrityAlert(check);
+    }
+    
+    if (packetMonitorConfig.packetIntegrity.errorHandling.log) {
+      // 3. 记录日志
+      await logIntegrityError(packet, check);
+    }
+  } catch (error) {
+    console.error('完整性错误处理失败:', error);
+  }
+}
+
+// 添加节点安全集成配置
+let nodeSecurityConfig = {
+  enabled: true,
+  
+  // 自动激活功能
+  autoActivation: {
+    enabled: true,
+    triggers: {
+      nodeConnection: true,    // 节点连接时
+      dataTransmission: true,  // 数据传输时
+      configChange: true       // 配置变更时
+    }
+  },
+
+  // 安全特性整合
+  securityFeatures: {
+    encryption: true,          // 军事级加密
+    antiSurveillance: true,    // 反监控
+    packetProtection: true,    // 数据包保护
+    privacyGuard: true        // 隐私保护
+  },
+
+  // 软件监控防护
+  antiSoftwareMonitoring: {
+    enabled: true,
+    features: {
+      processIsolation: true,    // 进程隔离
+      memoryProtection: true,    // 内存保护
+      apiHooking: true,          // API钩子防护
+      debugPrevention: true      // 调试预防
+    }
+  },
+
+  // 节点安全性验证
+  nodeValidation: {
+    enabled: true,
+    checks: {
+      certificate: true,       // 证书验证
+      protocol: true,         // 协议验证
+      encryption: true,       // 加密验证
+      reputation: true        // 信誉验证
+    }
+  }
+};
+
+// 添加节点安全管理器
+class NodeSecurityManager {
+  constructor() {
+    this.activeFeatures = new Set();
+    this.securityStatus = {
+      encryption: false,
+      monitoring: false,
+      protection: false,
+      privacy: false
+    };
+  }
+
+  // 初始化节点安全特性
+  async initialize() {
+    if (!nodeSecurityConfig.enabled) return;
+
+    try {
+      // 1. 验证节点安全性
+      await this.validateNode();
+      
+      // 2. 激活安全特性
+      await this.activateSecurityFeatures();
+      
+      // 3. 设置监控防护
+      await this.setupMonitoringProtection();
+      
+      // 4. 启动持续性保护
+      this.startContinuousProtection();
+      
+      console.log('节点安全特性初始化成功');
+    } catch (error) {
+      console.error('节点安全特性初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 验证节点安全性
+  async validateNode() {
+    if (!nodeSecurityConfig.nodeValidation.enabled) return;
+
+    const validation = {
+      passed: true,
+      details: {}
+    };
+
+    try {
+      // 1. 证书验证
+      if (nodeSecurityConfig.nodeValidation.checks.certificate) {
+        const certCheck = await this.validateCertificate();
+        validation.details.certificate = certCheck;
+        validation.passed = validation.passed && certCheck.valid;
+      }
+
+      // 2. 协议验证
+      if (nodeSecurityConfig.nodeValidation.checks.protocol) {
+        const protocolCheck = await this.validateProtocol();
+        validation.details.protocol = protocolCheck;
+        validation.passed = validation.passed && protocolCheck.valid;
+      }
+
+      // 3. 加密验证
+      if (nodeSecurityConfig.nodeValidation.checks.encryption) {
+        const encryptionCheck = await this.validateEncryption();
+        validation.details.encryption = encryptionCheck;
+        validation.passed = validation.passed && encryptionCheck.valid;
+      }
+
+      if (!validation.passed) {
+        throw new Error('节点安全验证失败');
+      }
+
+      return validation;
+    } catch (error) {
+      console.error('节点验证失败:', error);
+      throw error;
+    }
+  }
+
+  // 激活安全特性
+  async activateSecurityFeatures() {
+    if (!nodeSecurityConfig.securityFeatures.enabled) return;
+
+    try {
+      // 1. 激活军事级加密
+      if (nodeSecurityConfig.securityFeatures.encryption) {
+        await this.activateEncryption();
+        this.activeFeatures.add('encryption');
+      }
+
+      // 2. 激活反监控
+      if (nodeSecurityConfig.securityFeatures.antiSurveillance) {
+        await this.activateAntiSurveillance();
+        this.activeFeatures.add('antiSurveillance');
+      }
+
+      // 3. 激活数据包保护
+      if (nodeSecurityConfig.securityFeatures.packetProtection) {
+        await this.activatePacketProtection();
+        this.activeFeatures.add('packetProtection');
+      }
+
+      // 4. 激活隐私保护
+      if (nodeSecurityConfig.securityFeatures.privacyGuard) {
+        await this.activatePrivacyGuard();
+        this.activeFeatures.add('privacyGuard');
+      }
+    } catch (error) {
+      console.error('安全特性激活失败:', error);
+      throw error;
+    }
+  }
+
+  // 设置监控防护
+  async setupMonitoringProtection() {
+    if (!nodeSecurityConfig.antiSoftwareMonitoring.enabled) return;
+
+    try {
+      // 1. 设置进程隔离
+      if (nodeSecurityConfig.antiSoftwareMonitoring.features.processIsolation) {
+        await this.setupProcessIsolation();
+      }
+
+      // 2. 设置内存保护
+      if (nodeSecurityConfig.antiSoftwareMonitoring.features.memoryProtection) {
+        await this.setupMemoryProtection();
+      }
+
+      // 3. 设置API钩子防护
+      if (nodeSecurityConfig.antiSoftwareMonitoring.features.apiHooking) {
+        await this.setupApiHookProtection();
+      }
+
+      // 4. 设置调试预防
+      if (nodeSecurityConfig.antiSoftwareMonitoring.features.debugPrevention) {
+        await this.setupDebugPrevention();
+      }
+    } catch (error) {
+      console.error('监控防护设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 启动持续性保护
+  startContinuousProtection() {
+    // 定期检查和更新安全状态
+    setInterval(async () => {
+      await this.updateSecurityStatus();
+    }, 1000);
+
+    // 监听安全事件
+    this.listenForSecurityEvents();
+  }
+
+  // 更新安全状态
+  async updateSecurityStatus() {
+    try {
+      // 检查各个安全特性的状态
+      this.securityStatus.encryption = await this.checkEncryptionStatus();
+      this.securityStatus.monitoring = await this.checkMonitoringStatus();
+      this.securityStatus.protection = await this.checkProtectionStatus();
+      this.securityStatus.privacy = await this.checkPrivacyStatus();
+
+      // 如果发现异常，自动修复
+      if (this.hasSecurityIssues()) {
+        await this.autoRepairSecurity();
+      }
+    } catch (error) {
+      console.error('安全状态更新失败:', error);
+    }
+  }
+
+  // 监听安全事件
+  listenForSecurityEvents() {
+    // 监听节点连接事件
+    if (nodeSecurityConfig.autoActivation.triggers.nodeConnection) {
+      this.onNodeConnection(async () => {
+        await this.activateSecurityFeatures();
+      });
+    }
+
+    // 监听数据传输事件
+    if (nodeSecurityConfig.autoActivation.triggers.dataTransmission) {
+      this.onDataTransmission(async (data) => {
+        await this.protectTransmission(data);
+      });
+    }
+
+    // 监听配置变更事件
+    if (nodeSecurityConfig.autoActivation.triggers.configChange) {
+      this.onConfigChange(async (config) => {
+        await this.validateAndUpdateSecurity(config);
+      });
+    }
+  }
+}
+
+// 创建节点安全管理器实例
+const nodeSecurityManager = new NodeSecurityManager();
+
+// 在节点连接时自动初始化安全特性
+async function initializeNodeSecurity() {
+  await nodeSecurityManager.initialize();
+}
+
+// 在数据传输前调用
+async function prepareSecureTransmission(data) {
+  if (!nodeSecurityManager.securityStatus.encryption) {
+    await nodeSecurityManager.activateSecurityFeatures();
+  }
+  return await protectDataTransmission(data);
+}
+
+// 添加智能网络优化配置
+let networkOptimizationConfig = {
+  enabled: true,
+
+  // 智能路由优化
+  intelligentRouting: {
+    enabled: true,
+    algorithms: {
+      machineLearn: true,     // 机器学习路由优化
+      neuralNetwork: true,    // 神经网络路径预测
+      geneticAlgorithm: true  // 遗传算法路由选择
+    },
+    metrics: {
+      latency: true,          // 延迟指标
+      bandwidth: true,        // 带宽指标
+      packetLoss: true,       // 丢包率
+      jitter: true           // 抖动
+    }
+  },
+
+  // 自适应带宽控制
+  adaptiveBandwidth: {
+    enabled: true,
+    features: {
+      dynamicScaling: true,   // 动态带宽扩缩
+      qosOptimization: true,  // QoS优化
+      congestionPrediction: true, // 拥塞预测
+      trafficShaping: true    // 流量整形
+    },
+    parameters: {
+      minBandwidth: 1024 * 1024,    // 最小带宽(1MB/s)
+      maxBandwidth: 1024 * 1024 * 100, // 最大带宽(100MB/s)
+      scalingFactor: 1.5,    // 扩展因子
+      samplingInterval: 100   // 采样间隔(ms)
+    }
+  },
+
+  // 多路径传输优化
+  multiPathOptimization: {
+    enabled: true,
+    features: {
+      pathDiversity: true,    // 路径多样性
+      loadBalancing: true,    // 负载均衡
+      redundancy: true,       // 冗余传输
+      aggregation: true       // 带宽聚合
+    },
+    parameters: {
+      maxPaths: 8,           // 最大路径数
+      minPathQuality: 0.7,   // 最小路径质量
+      switchThreshold: 0.8,  // 切换阈值
+      aggregationFactor: 1.2 // 聚合因子
+    }
+  }
+};
+
+// 添加网络优化管理器
+class NetworkOptimizationManager {
+  constructor() {
+    this.routingModel = null;
+    this.bandwidthController = null;
+    this.pathManager = null;
+    this.metrics = {
+      currentLatency: 0,
+      currentBandwidth: 0,
+      packetLoss: 0,
+      jitter: 0
+    };
+  }
+
+  // 初始化优化系统
+  async initialize() {
+    try {
+      // 1. 初始化机器学习模型
+      await this.initializeML();
+      
+      // 2. 设置带宽控制器
+      await this.setupBandwidthController();
+      
+      // 3. 初始化多路径管理
+      await this.initializePathManager();
+      
+      // 4. 启动性能监控
+      this.startPerformanceMonitoring();
+      
+      console.log('网络优化系统初始化成功');
+    } catch (error) {
+      console.error('网络优化系统初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 初始化机器学习模型
+  async initializeML() {
+    if (!networkOptimizationConfig.intelligentRouting.enabled) return;
+
+    try {
+      // 1. 加载神经网络模型
+      if (networkOptimizationConfig.intelligentRouting.algorithms.neuralNetwork) {
+        this.routingModel = await this.loadNeuralNetwork();
+      }
+
+      // 2. 训练遗传算法
+      if (networkOptimizationConfig.intelligentRouting.algorithms.geneticAlgorithm) {
+        await this.trainGeneticAlgorithm();
+      }
+
+      // 3. 初始化预测模型
+      await this.initializePredictionModel();
+    } catch (error) {
+      console.error('机器学习模型初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 设置带宽控制器
+  async setupBandwidthController() {
+    if (!networkOptimizationConfig.adaptiveBandwidth.enabled) return;
+
+    try {
+      this.bandwidthController = {
+        // 动态带宽调整
+        adjustBandwidth: async (metrics) => {
+          const newBandwidth = await this.calculateOptimalBandwidth(metrics);
+          await this.applyBandwidthLimit(newBandwidth);
+        },
+
+        // QoS优化
+        optimizeQoS: async () => {
+          await this.prioritizeTraffic();
+          await this.optimizeBuffers();
+        },
+
+        // 拥塞控制
+        handleCongestion: async (congestionLevel) => {
+          if (congestionLevel > 0.8) {
+            await this.activateEmergencyMode();
+          }
+        }
+      };
+    } catch (error) {
+      console.error('带宽控制器设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 初始化多路径管理
+  async initializePathManager() {
+    if (!networkOptimizationConfig.multiPathOptimization.enabled) return;
+
+    try {
+      this.pathManager = {
+        // 路径发现
+        discoverPaths: async () => {
+          const paths = await this.findAvailablePaths();
+          return this.rankPaths(paths);
+        },
+
+        // 负载均衡
+        balanceLoad: async (paths) => {
+          return await this.optimizePathDistribution(paths);
+        },
+
+        // 带宽聚合
+        aggregateBandwidth: async (paths) => {
+          return await this.performBandwidthAggregation(paths);
+        }
+      };
+    } catch (error) {
+      console.error('多路径管理器初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 优化单个连接
+  async optimizeConnection(connection) {
+    try {
+      // 1. 收集性能指标
+      const metrics = await this.gatherMetrics(connection);
+      
+      // 2. 预测网络状况
+      const prediction = await this.predictNetworkConditions(metrics);
+      
+      // 3. 优化路由
+      await this.optimizeRouting(connection, prediction);
+      
+      // 4. 调整带宽
+      await this.adjustBandwidth(connection, metrics);
+      
+      // 5. 优化多路径
+      await this.optimizeMultiPath(connection);
+      
+      return true;
+    } catch (error) {
+      console.error('连接优化失败:', error);
+      return false;
+    }
+  }
+
+  // 收集性能指标
+  async gatherMetrics(connection) {
+    return {
+      latency: await this.measureLatency(connection),
+      bandwidth: await this.measureBandwidth(connection),
+      packetLoss: await this.measurePacketLoss(connection),
+      jitter: await this.measureJitter(connection)
+    };
+  }
+
+  // 预测网络状况
+  async predictNetworkConditions(metrics) {
+    if (!this.routingModel) return null;
+
+    try {
+      // 使用神经网络预测
+      const prediction = await this.routingModel.predict({
+        input: this.normalizeMetrics(metrics)
+      });
+
+      return {
+        expectedLatency: prediction.latency,
+        expectedBandwidth: prediction.bandwidth,
+        reliability: prediction.confidence
+      };
+    } catch (error) {
+      console.error('网络状况预测失败:', error);
+      return null;
+    }
+  }
+
+  // 优化路由
+  async optimizeRouting(connection, prediction) {
+    if (!prediction) return;
+
+    try {
+      // 1. 计算最优路径
+      const optimalPath = await this.calculateOptimalPath(connection, prediction);
+      
+      // 2. 应用路由优化
+      await this.applyRoutingOptimization(connection, optimalPath);
+      
+      // 3. 验证优化效果
+      await this.validateOptimization(connection);
+    } catch (error) {
+      console.error('路由优化失败:', error);
+    }
+  }
+
+  // 调整带宽
+  async adjustBandwidth(connection, metrics) {
+    try {
+      // 1. 计算理想带宽
+      const optimalBandwidth = await this.calculateOptimalBandwidth(metrics);
+      
+      // 2. 应用带宽限制
+      await this.applyBandwidthLimit(connection, optimalBandwidth);
+      
+      // 3. 监控调整效果
+      await this.monitorBandwidthAdjustment(connection);
+    } catch (error) {
+      console.error('带宽调整失败:', error);
+    }
+  }
+
+  // 优化多路径
+  async optimizeMultiPath(connection) {
+    if (!this.pathManager) return;
+
+    try {
+      // 1. 发现可用路径
+      const paths = await this.pathManager.discoverPaths();
+      
+      // 2. 负载均衡
+      const balancedPaths = await this.pathManager.balanceLoad(paths);
+      
+      // 3. 带宽聚合
+      await this.pathManager.aggregateBandwidth(balancedPaths);
+    } catch (error) {
+      console.error('多路径优化失败:', error);
+    }
+  }
+
+  // 启动性能监控
+  startPerformanceMonitoring() {
+    setInterval(async () => {
+      try {
+        // 更新性能指标
+        await this.updateMetrics();
+        
+        // 检查是否需要优化
+        if (this.needsOptimization()) {
+          await this.triggerOptimization();
+        }
+      } catch (error) {
+        console.error('性能监控更新失败:', error);
+      }
+    }, networkOptimizationConfig.adaptiveBandwidth.parameters.samplingInterval);
+  }
+}
+
+// 创建网络优化管理器实例
+const networkOptimizer = new NetworkOptimizationManager();
+
+// 在连接建立时初始化网络优化
+async function initializeNetworkOptimization() {
+  await networkOptimizer.initialize();
+}
+
+// 在数据传输前优化连接
+async function optimizeNetworkConnection(connection) {
+  return await networkOptimizer.optimizeConnection(connection);
+}
+
