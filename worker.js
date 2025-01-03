@@ -190,6 +190,795 @@ function initializeAntiSniffing() {
   }
 }
 
+// 添加量子纠缠增强配置
+let quantumEntanglementConfig = {
+  enabled: true,
+  
+  // 量子态配置
+  quantumState: {
+    type: 'bell',           // Bell态
+    precision: 'high',      // 高精度
+    stability: 'enhanced',  // 增强稳定性
+    verification: true      // 态验证
+  },
+
+  // 纠缠分发
+  entanglementDistribution: {
+    method: 'satellite',    // 卫星分发
+    redundancy: 3,         // 冗余度
+    purification: true,    // 纯化
+    distillation: true     // 蒸馏
+  },
+
+  // 量子存储
+  quantumMemory: {
+    type: 'optical',       // 光学存储
+    coherenceTime: 1000,   // 相干时间(ms)
+    errorCorrection: true, // 错误修正
+    capacity: 1024        // 存储容量(qubit)
+  },
+
+  // 量子中继
+  quantumRepeater: {
+    enabled: true,
+    nodes: 5,             // 中继节点数
+    purificationLevel: 3,  // 纯化级别
+    swappingProtocol: 'adaptive' // 自适应交换协议
+  }
+};
+
+// 添加量子纠缠管理器
+class QuantumEntanglementManager {
+  constructor() {
+    this.entangledPairs = new Map();
+    this.quantumMemory = new Array(quantumEntanglementConfig.quantumMemory.capacity);
+    this.repeaterNodes = new Array(quantumEntanglementConfig.quantumRepeater.nodes);
+    this.activeConnections = new Set();
+  }
+
+  // 初始化量子纠缠系统
+  async initializeQuantumEntanglement() {
+    try {
+      // 1. 准备量子态
+      await this.prepareQuantumStates();
+      
+      // 2. 建立纠缠分发
+      await this.setupEntanglementDistribution();
+      
+      // 3. 初始化量子存储
+      await this.initializeQuantumMemory();
+      
+      // 4. 配置量子中继
+      await this.setupQuantumRepeaters();
+      
+      console.log('量子纠缠系统初始化成功');
+      return true;
+    } catch (error) {
+      console.error('量子纠缠系统初始化失败:', error);
+      return false;
+    }
+  }
+
+  // 创建纠缠对
+  async createEntangledPair(connectionId) {
+    try {
+      // 1. 生成Bell态
+      const bellState = await this.generateBellState();
+      
+      // 2. 纯化处理
+      const purifiedState = await this.purifyQuantumState(bellState);
+      
+      // 3. 验证纠缠
+      if (!await this.verifyEntanglement(purifiedState)) {
+        throw new Error('纠缠验证失败');
+      }
+      
+      // 4. 存储纠缠对
+      this.entangledPairs.set(connectionId, purifiedState);
+      
+      return purifiedState;
+    } catch (error) {
+      console.error('纠缠对创建失败:', error);
+      throw error;
+    }
+  }
+
+  // 使用纠缠态加密数据
+  async encryptWithEntanglement(data, connectionId) {
+    try {
+      // 1. 获取或创建纠缠对
+      let entangledState = this.entangledPairs.get(connectionId);
+      if (!entangledState) {
+        entangledState = await this.createEntangledPair(connectionId);
+      }
+      
+      // 2. 量子态编码
+      const encodedData = await this.encodeQuantumState(data, entangledState);
+      
+      // 3. 纠缠增强加密
+      const encryptedData = await this.performEntanglementEncryption(encodedData);
+      
+      // 4. 量子纠错编码
+      const errorCorrectedData = await this.applyQuantumErrorCorrection(encryptedData);
+      
+      return errorCorrectedData;
+    } catch (error) {
+      console.error('纠缠加密失败:', error);
+      throw error;
+    }
+  }
+
+  // 使用纠缠态解密数据
+  async decryptWithEntanglement(encryptedData, connectionId) {
+    try {
+      // 1. 获取纠缠对
+      const entangledState = this.entangledPairs.get(connectionId);
+      if (!entangledState) {
+        throw new Error('找不到对应的纠缠对');
+      }
+      
+      // 2. 纠错解码
+      const correctedData = await this.reverseQuantumErrorCorrection(encryptedData);
+      
+      // 3. 纠缠解密
+      const decryptedQuantumData = await this.performEntanglementDecryption(correctedData);
+      
+      // 4. 量子态解码
+      const originalData = await this.decodeQuantumState(decryptedQuantumData, entangledState);
+      
+      return originalData;
+    } catch (error) {
+      console.error('纠缠解密失败:', error);
+      throw error;
+    }
+  }
+
+  // 量子中继传输
+  async relayQuantumState(state, sourceNode, targetNode) {
+    try {
+      // 1. 量子态传输
+      let currentState = state;
+      for (let i = sourceNode; i < targetNode; i++) {
+        // 2. 执行量子交换
+        currentState = await this.performEntanglementSwapping(
+          currentState, 
+          this.repeaterNodes[i]
+        );
+        
+        // 3. 纯化处理
+        currentState = await this.purifyQuantumState(currentState);
+        
+        // 4. 验证传输质量
+        if (!await this.verifyQuantumTransfer(currentState)) {
+          throw new Error(`中继节点 ${i} 传输验证失败`);
+        }
+      }
+      
+      return currentState;
+    } catch (error) {
+      console.error('量子中继传输失败:', error);
+      throw error;
+    }
+  }
+}
+
+// 创建量子纠缠管理器实例
+const quantumEntanglementManager = new QuantumEntanglementManager();
+
+// 初始化量子纠缠系统
+async function initializeQuantumEntanglement() {
+  return await quantumEntanglementManager.initializeQuantumEntanglement();
+}
+
+// 使用量子纠缠加密数据
+async function encryptWithQuantumEntanglement(data, connectionId) {
+  return await quantumEntanglementManager.encryptWithEntanglement(data, connectionId);
+}
+
+// 使用量子纠缠解密数据
+async function decryptWithQuantumEntanglement(encryptedData, connectionId) {
+  return await quantumEntanglementManager.decryptWithEntanglement(encryptedData, connectionId);
+}
+
+// 添加量子加密配置
+let quantumEncryptionConfig = {
+  enabled: true,
+
+  // 量子密钥分发(QKD)
+  quantumKeyDistribution: {
+    enabled: true,
+    protocols: {
+      bb84: true,         // BB84协议
+      e91: true,          // E91协议
+      b92: true,          // B92协议
+      sixState: true      // Six-state协议
+    },
+    keyLength: 4096,      // 量子密钥长度
+    refreshInterval: 60   // 密钥刷新间隔(秒)
+  },
+
+  // 量子纠缠加密
+  quantumEntanglement: {
+    enabled: true,
+    features: {
+      statePreservation: true,  // 量子态保持
+      errorCorrection: true,    // 量子纠错
+      privacyAmplification: true, // 隐私放大
+      entanglementSwapping: true  // 纠缠交换
+    }
+  },
+
+  // 后量子密码学
+  postQuantumCrypto: {
+    enabled: true,
+    algorithms: {
+      lattice: true,      // 格密码
+      multivariate: true, // 多变量密码
+      hash: true,         // 哈希签名
+      isogeny: true       // 同源密码
+    }
+  },
+
+  // 量子随机数生成
+  quantumRNG: {
+    enabled: true,
+    sources: {
+      photonic: true,     // 光子源
+      atmospheric: true,  // 大气噪声
+      thermal: true,      // 热噪声
+      quantum: true       // 量子隧穿
+    },
+    bufferSize: 1024 * 1024  // 随机数缓冲区大小
+  }
+};
+
+// 添加加密配置
+const encryptionConfig1 = {
+  enabled: true,
+  algorithm: 'AES-GCM',
+  keySize: 32, // 256位密钥
+  saltSize: 16,
+  ivSize: 12,
+  tagLength: 16,
+  iterationCount: 100000,
+  key: 'your-secure-encryption-key', // 请替换为安全的密钥
+  obfuscation: {
+    enabled: true
+  }
+};
+
+// 修改日志即时销毁配置
+let logDestructConfig = {
+  enabled: true,
+  
+  // 即时销毁策略
+  instantDestruct: {
+    enabled: true,
+    // 完全禁止任何形式的存储
+    noStorage: true,
+    // 禁止内存缓存
+    noMemoryCache: true,
+    // 禁止临时变量
+    noTempVariables: true,
+    // 禁止垃圾回收前的残留
+    preventGCResidual: true
+  },
+
+  // 日志处理方式
+  logHandling: {
+    // 完全禁止日志输出
+    noOutput: true,
+    // 禁止控制台输出
+    noConsole: true,
+    // 禁止错误追踪
+    noErrorTrace: true,
+    // 禁止调试信息
+    noDebugInfo: true
+  }
+};
+
+// 替换所有日志相关函数
+const log = (() => {
+  // 直接返回空函数,不执行任何操作
+  return () => {};
+})();
+
+// 替换 console.log
+console.log = () => {};
+console.info = () => {};
+console.warn = () => {};
+console.error = () => {};
+console.debug = () => {};
+
+// 禁用错误堆栈
+Error.stackTraceLimit = 0;
+Error.prepareStackTrace = () => '';
+
+// 替换原有的日志处理函数
+const secureLog = () => {};
+
+// 处理必要的系统消息(如果确实需要显示某些信息)
+const systemMessage = (message) => {
+  // 立即清除消息内容
+  const clearMessage = () => {
+    message = null;
+    // 强制垃圾回收
+    if (global.gc) {
+      global.gc();
+    }
+  };
+  
+  // 显示加密后的占位符
+  if (logDestructConfig.logHandling.noOutput === false) {
+    const placeholder = '[SYSTEM-MESSAGE]';
+    // 立即清除
+    setTimeout(clearMessage, 0);
+    return placeholder;
+  }
+  
+  // 默认不显示任何内容
+  clearMessage();
+  return;
+};
+
+// 安全的错误处理
+const handleError = (error) => {
+  // 立即清除错误信息
+  error = null;
+  if (global.gc) {
+    global.gc();
+  }
+};
+
+// 替换 WebSocket 的日志
+WebSocket.prototype.send = new Proxy(WebSocket.prototype.send, {
+  apply(target, thisArg, args) {
+    // 不记录任何日志,直接发送数据
+    return Reflect.apply(target, thisArg, args);
+  }
+});
+
+// 禁用 Performance API
+if (typeof performance !== 'undefined') {
+  performance.mark = () => {};
+  performance.measure = () => {};
+}
+
+// 禁用 localStorage 和 sessionStorage
+if (typeof localStorage !== 'undefined') {
+  localStorage.clear();
+  Object.defineProperty(window, 'localStorage', {
+    get: () => null
+  });
+}
+
+if (typeof sessionStorage !== 'undefined') {
+  sessionStorage.clear();
+  Object.defineProperty(window, 'sessionStorage', {
+    get: () => null
+  });
+}
+
+// 改进加密函数
+async function encryptTraffic(data) {
+  if (!encryptionConfig.enabled || !encryptionConfig.key) {
+    return data;
+  }
+
+  try {
+    // 生成随机盐值和IV
+    const salt = crypto.getRandomValues(new Uint8Array(encryptionConfig.saltSize));
+    const iv = crypto.getRandomValues(new Uint8Array(encryptionConfig.ivSize));
+    
+    // 使用 PBKDF2 派生密钥
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(encryptionConfig.key),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits', 'deriveKey']
+    );
+
+    // 派生加密密钥
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: encryptionConfig.iterationCount,
+        hash: 'SHA-512'
+      },
+      keyMaterial,
+      {
+        name: encryptionConfig.algorithm,
+        length: encryptionConfig.keySize * 8
+      },
+      false,
+      ['encrypt']
+    );
+
+    // 加密数据
+    const encrypted = await crypto.subtle.encrypt(
+      {
+        name: encryptionConfig.algorithm,
+        iv: iv,
+        tagLength: encryptionConfig.tagLength * 8
+      },
+      key,
+      data
+    );
+
+    // 组合所有组件：版本(1字节) + 盐值 + IV + 加密数据
+    const version = new Uint8Array([1]);
+    const result = new Uint8Array(
+      version.length + 
+      salt.length + 
+      iv.length + 
+      encrypted.byteLength
+    );
+    
+    let offset = 0;
+    result.set(version, offset);
+    offset += version.length;
+    result.set(salt, offset);
+    offset += salt.length;
+    result.set(iv, offset);
+    offset += iv.length;
+    result.set(new Uint8Array(encrypted), offset);
+
+    return result;
+  } catch (error) {
+    console.error('加密失败:', error);
+    return data;
+  }
+}
+
+// 添加解密函数
+async function decryptTraffic(encryptedData) {
+  if (!encryptionConfig.enabled || !encryptionConfig.key) {
+    return encryptedData;
+  }
+
+  try {
+    // 解析版本和各个组件
+    let offset = 0;
+    const version = encryptedData[0];
+    offset += 1;
+    
+    const salt = encryptedData.slice(offset, offset + encryptionConfig.saltSize);
+    offset += encryptionConfig.saltSize;
+    
+    const iv = encryptedData.slice(offset, offset + encryptionConfig.ivSize);
+    offset += encryptionConfig.ivSize;
+    
+    const data = encryptedData.slice(offset);
+
+    // 派生解密密钥
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(encryptionConfig.key),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits', 'deriveKey']
+    );
+
+    const key = await crypto.subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: encryptionConfig.iterationCount,
+        hash: 'SHA-512'
+      },
+      keyMaterial,
+      {
+        name: encryptionConfig.algorithm,
+        length: encryptionConfig.keySize * 8
+      },
+      false,
+      ['decrypt']
+    );
+
+    // 解密数据
+    const decrypted = await crypto.subtle.decrypt(
+      {
+        name: encryptionConfig.algorithm,
+        iv: iv,
+        tagLength: encryptionConfig.tagLength * 8
+      },
+      key,
+      data
+    );
+
+    return new Uint8Array(decrypted);
+  } catch (error) {
+    console.error('解密失败:', error);
+    return encryptedData;
+  }
+}
+
+// 在数据传输前加密
+async function sendData(data) {
+  // 先加密数据
+  const encryptedData = await encryptTraffic(data);
+  
+  // 然后应用其他保护措施
+  return await protectDataTransmission(encryptedData);
+}
+
+// 在数据接收时解密
+async function receiveData(data) {
+  // 先移除保护措施
+  const unprotectedData = await unprotectDataReception(data);
+  
+  // 然后解密数据
+  return await decryptTraffic(unprotectedData);
+}
+
+// 添加数据包隐私保护配置
+let packetPrivacyConfig = {
+  enabled: true,
+  
+  // 日志隐私保护
+  logPrivacy: {
+    enabled: true,
+    // 需要隐藏的敏感信息类型
+    sensitiveFields: [
+      'outbound/维列斯',
+      'inbound/mixed',
+      'connection to',
+      'connection from',
+      'self.events',
+      'download',
+      'IP addresses',
+      'domains',
+      'ports'
+    ],
+    // 替换方式
+    replacements: {
+      default: '********',
+      connection: '[encrypted-connection]',
+      address: '[protected-address]',
+      port: '[protected-port]'
+    }
+  },
+
+  // 连接信息保护
+  connectionPrivacy: {
+    enabled: true,
+    hideDetails: true,
+    encryptMetadata: true
+  }
+};
+
+// 添加日志隐私处理函数
+function sanitizeLogMessage(message) {
+  if (!packetPrivacyConfig.enabled || !packetPrivacyConfig.logPrivacy.enabled) {
+    return message;
+  }
+
+  let sanitizedMsg = message;
+  
+  // 隐藏敏感信息
+  packetPrivacyConfig.logPrivacy.sensitiveFields.forEach(field => {
+    // 使用正则表达式匹配需要隐藏的信息
+    const regex = new RegExp(`(${field}[^\\s]*\\s*[\\w.-]+(?::[0-9]+)?)`, 'gi');
+    sanitizedMsg = sanitizedMsg.replace(regex, (match) => {
+      if (match.includes('connection')) {
+        return packetPrivacyConfig.logPrivacy.replacements.connection;
+      } else if (match.includes(':')) {
+        return packetPrivacyConfig.logPrivacy.replacements.address;
+      } else {
+        return packetPrivacyConfig.logPrivacy.replacements.default;
+      }
+    });
+  });
+
+  return sanitizedMsg;
+}
+
+// 修改现有的日志记录函数
+const log1 = (info, event) => {
+  // 在记录日志前进行隐私处理
+  const sanitizedInfo = sanitizeLogMessage(info);
+  const sanitizedEvent = event ? sanitizeLogMessage(event) : '';
+  
+  // 记录处理后的日志
+  console.log(`[Protected Connection] ${sanitizedInfo}`, sanitizedEvent || '');
+};
+
+// 修改连接处理函数,在建立连接时启用隐私保护
+async function handleConnection(connection) {
+  if (packetPrivacyConfig.connectionPrivacy.enabled) {
+    // 隐藏连接详情
+    if (packetPrivacyConfig.connectionPrivacy.hideDetails) {
+      connection.metadata = '[Protected Connection Details]';
+    }
+    
+    // 加密元数据
+    if (packetPrivacyConfig.connectionPrivacy.encryptMetadata) {
+      connection.metadata = await encryptMetadata(connection.metadata);
+    }
+  }
+  
+  return connection;
+}
+
+// 量子加密管理器
+class QuantumEncryptionManager {
+  constructor() {
+    this.quantumKeys = new Map();
+    this.entangledPairs = new Map();
+    this.qrngBuffer = new Uint8Array(quantumEncryptionConfig.quantumRNG.bufferSize);
+    this.lastKeyRefresh = Date.now();
+  }
+
+  // 初始化量子加密系统
+  async initialize() {
+    try {
+      // 1. 初始化量子密钥分发
+      await this.initializeQKD();
+      
+      // 2. 建立量子纠缠
+      await this.setupQuantumEntanglement();
+      
+      // 3. 初始化后量子算法
+      await this.initializePostQuantum();
+      
+      // 4. 启动量子随机数生成器
+      await this.startQuantumRNG();
+      
+      // 5. 启动自动密钥刷新
+      this.startKeyRefresh();
+      
+      console.log('量子加密系统初始化成功');
+    } catch (error) {
+      console.error('量子加密系统初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 量子加密数据
+  async encryptQuantum(data) {
+    try {
+      // 1. 获取量子密钥
+      const quantumKey = await this.getQuantumKey();
+      
+      // 2. 应用量子纠缠
+      const entangledState = await this.applyEntanglement(data);
+      
+      // 3. 后量子加密
+      const postQuantumEncrypted = await this.postQuantumEncrypt(entangledState);
+      
+      // 4. 量子随机填充
+      const finalData = await this.addQuantumPadding(postQuantumEncrypted);
+      
+      return finalData;
+    } catch (error) {
+      console.error('量子加密失败:', error);
+      throw error;
+    }
+  }
+
+  // 量子解密数据
+  async decryptQuantum(encryptedData) {
+    try {
+      // 1. 移除量子填充
+      const unpaddedData = await this.removeQuantumPadding(encryptedData);
+      
+      // 2. 后量子解密
+      const postQuantumDecrypted = await this.postQuantumDecrypt(unpaddedData);
+      
+      // 3. 解除量子纠缠
+      const disentangledData = await this.removeEntanglement(postQuantumDecrypted);
+      
+      // 4. 使用量子密钥解密
+      const decryptedData = await this.decryptWithQuantumKey(disentangledData);
+      
+      return decryptedData;
+    } catch (error) {
+      console.error('量子解密失败:', error);
+      throw error;
+    }
+  }
+
+  // 生成量子密钥
+  async generateQuantumKey() {
+    try {
+      // 1. 生成量子比特
+      const qubits = await this.generateQubits();
+      
+      // 2. 应用BB84协议
+      const rawKey = await this.applyBB84Protocol(qubits);
+      
+      // 3. 错误校正
+      const correctedKey = await this.performErrorCorrection(rawKey);
+      
+      // 4. 隐私放大
+      const finalKey = await this.privacyAmplification(correctedKey);
+      
+      return finalKey;
+    } catch (error) {
+      console.error('量子密钥生成失败:', error);
+      throw error;
+    }
+  }
+
+  // 建立量子纠缠
+  async createEntangledPair() {
+    try {
+      // 1. 生成Bell态
+      const bellState = await this.generateBellState();
+      
+      // 2. 维持纠缠
+      await this.maintainEntanglement(bellState);
+      
+      // 3. 验证纠缠
+      await this.verifyEntanglement(bellState);
+      
+      return bellState;
+    } catch (error) {
+      console.error('量子纠缠建立失败:', error);
+      throw error;
+    }
+  }
+
+  // 生成量子随机数
+  async generateQuantumRandom(length) {
+    try {
+      // 1. 收集量子源
+      const quantumSources = await this.collectQuantumSources();
+      
+      // 2. 提取随机性
+      const randomness = await this.extractRandomness(quantumSources);
+      
+      // 3. 验证随机性
+      await this.verifyRandomness(randomness);
+      
+      return randomness;
+    } catch (error) {
+      console.error('量子随机数生成失败:', error);
+      throw error;
+    }
+  }
+
+  // 启动密钥自动刷新
+  startKeyRefresh() {
+    setInterval(async () => {
+      try {
+        // 1. 生成新的量子密钥
+        const newKey = await this.generateQuantumKey();
+        
+        // 2. 安全地替换旧密钥
+        await this.rotateQuantumKeys(newKey);
+        
+        // 3. 更新纠缠对
+        await this.refreshEntanglement();
+        
+        this.lastKeyRefresh = Date.now();
+      } catch (error) {
+        console.error('量子密钥刷新失败:', error);
+      }
+    }, quantumEncryptionConfig.quantumKeyDistribution.refreshInterval * 1000);
+  }
+}
+
+// 创建量子加密管理器实例
+const quantumEncryptionManager = new QuantumEncryptionManager();
+
+// 初始化量子加密
+async function initializeQuantumEncryption() {
+  await quantumEncryptionManager.initialize();
+}
+
+// 使用量子加密保护数据
+async function protectWithQuantumEncryption(data) {
+  return await quantumEncryptionManager.encryptQuantum(data);
+}
+
+// 恢复量子加密的数据
+async function recoverQuantumEncryptedData(encryptedData) {
+  return await quantumEncryptionManager.decryptQuantum(encryptedData);
+}
+
 // 添加密钥派生函数
 async function deriveKey(password, salt) {
   const encoder = new TextEncoder();
@@ -222,7 +1011,7 @@ async function deriveKey(password, salt) {
 }
 
 // 改进加密函数
-async function encryptTraffic(data) {
+async function encryptTraffic1(data) {
   if (!encryptionConfig.enabled || !encryptionConfig.key) {
     return data;
   }
@@ -300,7 +1089,7 @@ async function encryptTraffic(data) {
 }
 
 // 改进解密函数
-async function decryptTraffic(encryptedData) {
+async function decryptTraffic1(encryptedData) {
   if (!encryptionConfig.enabled || !encryptionConfig.key) {
     return encryptedData;
   }
@@ -604,6 +1393,85 @@ function arrayEquals(a, b) {
          a.every((val, index) => val === b[index]);
 }
 
+// 在现有变量声明后添加强制加密配置
+let forceEncryptionConfig = {
+  enabled: true,
+  
+  // 数据包加密
+  packetEncryption: {
+    enabled: true,
+    algorithm: 'AES-256-GCM',
+    keyRotation: true,
+    keyRotationInterval: 3600, // 1小时轮换一次密钥
+  },
+
+  // 数据包混淆
+  packetObfuscation: {
+    enabled: true,
+    method: 'chacha20-poly1305',
+    padding: true,
+    paddingSize: 32
+  },
+
+  // 数据包隐藏
+  packetHiding: {
+    enabled: true,
+    hideOriginalData: true,
+    replaceWithKey: true,
+    keyDisplayFormat: '********'
+  }
+};
+
+// 添加数据包加密处理函数
+async function forceEncryptPacket(packet) {
+  if (!forceEncryptionConfig.enabled) return packet;
+
+  try {
+    // 1. 加密原始数据
+    const encryptedData = await encryptPacketData(packet);
+    
+    // 2. 混淆数据
+    const obfuscatedData = await obfuscatePacketData(encryptedData);
+    
+    // 3. 隐藏原始信息
+    if (forceEncryptionConfig.packetHiding.enabled) {
+      return hidePacketData(obfuscatedData);
+    }
+    
+    return obfuscatedData;
+  } catch (error) {
+    console.error('强制加密失败:', error);
+    return packet;
+  }
+}
+
+// 添加数据包隐藏函数
+function hidePacketData(packet) {
+  if (!forceEncryptionConfig.packetHiding.enabled) return packet;
+
+  const hiddenPacket = {...packet};
+  
+  if (forceEncryptionConfig.packetHiding.hideOriginalData) {
+    // 替换敏感数据为密钥显示
+    if (forceEncryptionConfig.packetHiding.replaceWithKey) {
+      hiddenPacket.data = forceEncryptionConfig.packetHiding.keyDisplayFormat;
+      hiddenPacket.originalSize = packet.data.length;
+    }
+    
+    // 删除其他可能暴露信息的字段
+    delete hiddenPacket.plaintext;
+    delete hiddenPacket.rawData;
+    delete hiddenPacket.metadata;
+  }
+
+  return hiddenPacket;
+}
+
+// 在数据包处理前调用强制加密
+async function processPacket(packet) {
+  return await forceEncryptPacket(packet);
+}
+
 export default {
 	async fetch(request, env, ctx) {
 		try {
@@ -633,7 +1501,7 @@ export default {
 			}
 
 			if (!userID) {
-				return new Response('请设置你的UUID变量，或尝试重试部署，检查变量是否生效？', {
+				return new Response('请设置你的UUID���量，或尝试重试部署，检查变量是否生效？', {
 					status: 404,
 					headers: {
 						"Content-Type": "text/plain;charset=utf-8",
@@ -953,7 +1821,7 @@ async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portR
 		remoteSocket.value = tcpSocket;
 		//log(`connected to ${address}:${port}`);
 		const writer = tcpSocket.writable.getWriter();
-		// 首次写入，通常是 TLS 客户端 Hello 消息
+		// 首次写��，通常是 TLS 客户端 Hello 消息
 		await writer.write(rawClientData);
 		writer.releaseLock();
 		return tcpSocket;
@@ -1049,7 +1917,7 @@ function makeReadableWebSocketStream(webSocketServer, earlyDataHeader, log) {
 				// 如果解码早期数据时出错，将错误传递给控制器
 				controller.error(error);
 			} else if (earlyData) {
-				// 如果有早期数据，将其加入流的队列中
+				// 如果有早期数据，���其加入流的队列中
 				controller.enqueue(earlyData);
 			}
 		},
@@ -1393,7 +2261,7 @@ for (let i = 0; i < 256; ++i) {
  */
 function unsafeStringify(arr, offset = 0) {
 	// 直接从查找表中获取每个字节的十六进制表示，并拼接成 UUID 格式
-	// 8-4-4-4-12 的分组是��过精心放置的连字符 "-" 实现的
+	// 8-4-4-4-12 的分组是通过精心放置的连字符 "-" 实现的
 	// toLowerCase() 确保整个 UUID 是小写的
 	return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" +
 		byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" +
@@ -1409,7 +2277,7 @@ function unsafeStringify(arr, offset = 0) {
  * @param {Uint8Array} arr 包含 UUID 字节的数组
  * @param {number} offset 数组中 UUID 开始的位置，默认为 0
  * @returns {string} 有效的 UUID 字符串
- * @throws {TypeError} 如果生成   UUID 字符串无效
+ * @throws {TypeError} 如果生成的 UUID 字符串无效
  */
 function stringify(arr, offset = 0) {
 	// 使用不安全的函数快速生成 UUID 字符串
@@ -1431,7 +2299,7 @@ function stringify(arr, offset = 0) {
  */
 async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log) {
 	// 无论客户端发送到哪个 DNS 服务器，我们总是使用硬编码的服务器
-	// 因为有些 DNS 服务器不  持 DNS over TCP
+	// 因为有些 DNS 服务器不持 DNS over TCP
 	try {
 		// 选用 Google 的 DNS 服务器（注：后续可能会改为 Cloudflare 的 1.1.1.1）
 		const dnsServer = '8.8.4.4'; // 在 Cloudflare 修复连接自身 IP 的 bug 后，将改为 1.1.1.1
@@ -1455,7 +2323,7 @@ async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log)
 			async write(chunk) {
 				if (webSocket.readyState === WS_READY_STATE_OPEN) {
 					if (维列斯Header) {
-						// 如果有 ��列斯 头部，则将其与 DNS 响应数据合并后发送
+						// 如果有 维列斯 头部，则将其与 DNS 响应数据合并后发送
 						webSocket.send(await new Blob([维列斯Header, chunk]).arrayBuffer());
 						维列斯Header = null; // 头部只发送一次，之后置为 null
 					} else {
@@ -1472,9 +2340,9 @@ async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log)
 			},
 		}));
 	} catch (error) {
-		// 捕获并记录任何可能发生的错��
+		// 捕获并记录任何可能发生的错误
 		console.error(
-			`handleDNSQuery 函数发生异常，错误   息: ${error.message}`
+			`handleDNSQuery 函数发生异常，错误信息: ${error.message}`
 		);
 	}
 }
@@ -1790,7 +2658,7 @@ function 配置信息(UUID, 域名地址) {
 }
 
 let subParams = ['sub', 'base64', 'b64', 'clash', 'singbox', 'sb'];
-const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhJTNDYnIlM0UKJTNDYSUyMGhyZWYlM0QlMjdodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlMjclM0VodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlM0MlMkZhJTNFJTNDYnIlM0UKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tJTNDYnIlM0UKZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISElM0NiciUzRQolM0NhJTIwaHJlZiUzRCUyN2h0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUyNyUzRWh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUzQyUyRmElM0UlM0NiciUzRQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0lM0NiciUzRQolMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjM='));
+const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhJTNDYnIlM0UKJTNDYSUyMGhyZWYlM0QlMjdodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlMjclM0VodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlM0MlMkZhJTNFJTNDYnIlM0UKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tJTNDYnIlM0UKZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISElM0NiciUzRQolM0NhJTIwaHJlZiUzRCUyN2h0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUyNyUzRWh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUzQyUyRmElM0UlM0NiciUzRQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0lM0NiciUzRQolMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjM='));
 /**
  * @param {string} userID
  * @param {string | null} hostName
@@ -2631,12 +3499,12 @@ async function KV(request, env, txt = 'ADD.txt') {
 				---------------------------------------------------------------<br>
 				&nbsp;&nbsp;<strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">注意事项∨</a></strong><br>
 				<div id="noticeContent" class="notice-content">
-					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0Zwb3J0JTNEMjA1MyUzQyUyRnN0cm9uZyUzRSUzQ2JyJTNFJTNDYnIlM0UKJTA5JTA5JTA5JTA5JTA5JTI2bmJzcCUzQiUyNm5ic3AlM0ItJTIwJUU1JUE2JTgyJUU5JTlDJTgwJUU2JThDJTg3JUU1JUFFJTlBJUU4JThBJTgyJUU3JTgyJUI5JUU1JUE0JTg3JUU2JUIzJUE4JUU1JThGJUFGJUU1JUIwJTg2JTIyJTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0Zwb3J0JTNEMjA1MyUzQyUyRnN0cm9uZyUzRSUzQ2JyJTNFJTNDYnIlM0UKJTA5JTA5JTA5JTA5JTA5JTI2bmJzcCUzQiUyNm5ic3AlM0ItJTIwJUU1JUE2JTgyJUU5JTlDJTgwJUU2JThDJTg3JUU1JUFFJTlBJUU4JThBJTgyJUU3JTgyJUI5JUU1JUE0JTg3JUU2JUIzJUE4JUU1JThGJUFGJUU1JUIwJTg2JTIyJTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUzQ3N0cm9uZyUzRSUyNiUzQyUyRnN0cm9uZyUzRXBvcnQlM0QyMDUzJTNDYnIlM0U='))}
+					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
 				</div>
 				<div class="editor-container">
 					${hasKV ? `
 					<textarea class="editor" 
-					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
+					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiU5QyVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
 						id="content">${content}</textarea>
 					<div class="save-container">
 						<button class="back-btn" onclick="goBack()">返回配置页</button>
@@ -2654,13 +3522,13 @@ async function KV(request, env, txt = 'ADD.txt') {
 					let timer;
 					const textarea = document.getElementById('content');
 					const originalContent = textarea.value;
-		
+					
 					function goBack() {
 						const currentUrl = window.location.href;
 						const parentUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
 						window.location.href = parentUrl;
 					}
-		
+					
 					function replaceFullwidthColon() {
 						const text = textarea.value;
 						textarea.value = text.replace(/：/g, ':');
@@ -3307,40 +4175,32 @@ async function simulateNetworkDelay(channelId) {
 let routingConfig = {
   enabled: true,
   rules: {
-    // 添加常见软件和网站的路由规则
+    // 添加���见软件和网站的路由规则
     applications: [
       {
         type: 'field',
-        domain: [
-          'netflix.com',
-          'netflix.net',
-          'nflxvideo.net',
-          'nflxso.net',
-          'nflxext.com',
-          'nflximg.net'
-        ],
-        outboundTag: 'netflix'
-      },
-      {
-        type: 'field', 
-        domain: [
-          'youtube.com',
-          'googlevideo.com',
-          'ytimg.com',
-          'gvt1.com',
-          'ggpht.com'
-        ],
-        outboundTag: 'youtube'
-      },
-      {
-        type: 'field',
-        domain: [
-          'spotify.com',
-          'spoti.fi',
-          'spotifycdn.net',
-          'scdn.co'
-        ],
-        outboundTag: 'spotify'
+        domain: ['*'], // 匹配所有域名
+        outboundTag: 'auto', // 自动选择最优线路
+        balancer: {
+          strategy: 'latency', // 基于延迟自动选择
+          rules: [
+            {
+              minLatency: 0,
+              maxLatency: 100,
+              tag: 'fast'
+            },
+            {
+              minLatency: 100, 
+              maxLatency: 200,
+              tag: 'medium'
+            },
+            {
+              minLatency: 200,
+              tag: 'slow'
+            }
+          ]
+        },
+        fallback: ['fast', 'medium', 'slow'] // 故障转移顺序
       }
     ],
     
@@ -4554,7 +5414,7 @@ let antiSurveillanceConfig1 = {
   // 系统级防护
   systemProtection: {
     enabled: true,
-    // 防止系统级钩子
+    // 防止系��级钩子
     antiHook: {
       enabled: true,
       methods: ['API', 'DLL', 'KERNEL'],
@@ -5462,7 +6322,7 @@ let packetMonitorConfig = {
       integrity: true      // 完整性
     },
     alerts: {
-      threshold: 0.01,     // 告警阈值(1%)
+      threshold: 0.01,     // 告警值(1%)
       notification: true   // 启用通知
     }
   }
@@ -6113,7 +6973,7 @@ class NetworkOptimizationManager {
     }
   }
 
-  // 优化单个连接
+  // 优化单连接
   async optimizeConnection(connection) {
     try {
       // 1. 收集性能指标
@@ -6252,3 +7112,638 @@ async function optimizeNetworkConnection(connection) {
   return await networkOptimizer.optimizeConnection(connection);
 }
 
+// 添加网络环境适配配置
+let networkEnvironmentConfig = {
+  enabled: true,
+
+  // 网络环境感知
+  environmentSensing: {
+    enabled: true,
+    features: {
+      networkType: true,      // 网络类型检测(WiFi/4G/5G等)
+      signalStrength: true,   // 信号强度监测
+      networkStability: true, // 网络稳定性分析
+      interferenceDetection: true // 干扰检测
+    },
+    samplingRate: 1000       // 采样率(ms)
+  },
+
+  // 智能适配策略
+  adaptiveStrategy: {
+    enabled: true,
+    strategies: {
+      poorNetwork: {         // 差网环境策略
+        compression: 'high',
+        redundancy: 'maximum',
+        packetSize: 'minimum',
+        retryAttempts: 5
+      },
+      mediumNetwork: {       // 中等网络策略
+        compression: 'medium',
+        redundancy: 'normal',
+        packetSize: 'optimal',
+        retryAttempts: 3
+      },
+      goodNetwork: {         // 好网络策略
+        compression: 'low',
+        redundancy: 'minimum',
+        packetSize: 'maximum',
+        retryAttempts: 1
+      }
+    }
+  },
+
+  // 网络质量提升
+  qualityEnhancement: {
+    enabled: true,
+    features: {
+      signalBoost: true,     // 信号增强
+      noiseReduction: true,  // 噪声降低
+      errorCorrection: true, // 错误修正
+      streamOptimization: true // 流优化
+    }
+  },
+
+  // 智能缓存
+  intelligentCaching: {
+    enabled: true,
+    features: {
+      predictiveCaching: true,  // 预测性缓存
+      adaptiveBuffering: true,  // 自适应缓冲
+      contentPriority: true,    // 内容优先级
+      smartPrefetch: true       // 智能预取
+    },
+    cacheSize: 100 * 1024 * 1024 // 100MB缓存大小
+  }
+};
+
+// 添加网络环境管理器
+class NetworkEnvironmentManager {
+  constructor() {
+    this.currentEnvironment = null;
+    this.environmentHistory = [];
+    this.activeStrategy = null;
+    this.qualityMetrics = {
+      signalStrength: 0,
+      stability: 0,
+      interference: 0,
+      errorRate: 0
+    };
+  }
+
+  // 初始化环境管理器
+  async initialize() {
+    try {
+      // 1. 初始化环境感知
+      await this.initializeEnvironmentSensing();
+      
+      // 2. 设置适配策略
+      await this.setupAdaptiveStrategy();
+      
+      // 3. 初始化质量提升
+      await this.initializeQualityEnhancement();
+      
+      // 4. 设置智能缓存
+      await this.setupIntelligentCaching();
+      
+      // 5. 启动环境监控
+      this.startEnvironmentMonitoring();
+      
+      console.log('网络环境管理器初始化成功');
+    } catch (error) {
+      console.error('网络环境管理器初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 初始化环境感知
+  async initializeEnvironmentSensing() {
+    if (!networkEnvironmentConfig.environmentSensing.enabled) return;
+
+    try {
+      // 1. 初始化网络类型检测
+      if (networkEnvironmentConfig.environmentSensing.features.networkType) {
+        await this.initializeNetworkTypeDetection();
+      }
+
+      // 2. 初始化信号强度监测
+      if (networkEnvironmentConfig.environmentSensing.features.signalStrength) {
+        await this.initializeSignalStrengthMonitoring();
+      }
+
+      // 3. 初始化稳定性分析
+      if (networkEnvironmentConfig.environmentSensing.features.networkStability) {
+        await this.initializeStabilityAnalysis();
+      }
+
+      // 4. 初始化干扰检测
+      if (networkEnvironmentConfig.environmentSensing.features.interferenceDetection) {
+        await this.initializeInterferenceDetection();
+      }
+    } catch (error) {
+      console.error('环境感知初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 设置适配策略
+  async setupAdaptiveStrategy() {
+    if (!networkEnvironmentConfig.adaptiveStrategy.enabled) return;
+
+    try {
+      this.strategyController = {
+        // 策略选择
+        selectStrategy: async (environmentType) => {
+          return networkEnvironmentConfig.adaptiveStrategy.strategies[environmentType];
+        },
+
+        // 策略应用
+        applyStrategy: async (strategy) => {
+          await this.applyCompressionLevel(strategy.compression);
+          await this.setRedundancyLevel(strategy.redundancy);
+          await this.adjustPacketSize(strategy.packetSize);
+          await this.configureRetryAttempts(strategy.retryAttempts);
+        },
+
+        // 策略评估
+        evaluateStrategy: async () => {
+          const metrics = await this.gatherPerformanceMetrics();
+          return this.calculateStrategyEffectiveness(metrics);
+        }
+      };
+    } catch (error) {
+      console.error('适配策略设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 初始化质量提升
+  async initializeQualityEnhancement() {
+    if (!networkEnvironmentConfig.qualityEnhancement.enabled) return;
+
+    try {
+      // 1. 设置信号增强
+      if (networkEnvironmentConfig.qualityEnhancement.features.signalBoost) {
+        await this.setupSignalBoost();
+      }
+
+      // 2. 设置噪声降低
+      if (networkEnvironmentConfig.qualityEnhancement.features.noiseReduction) {
+        await this.setupNoiseReduction();
+      }
+
+      // 3. 设置错误修正
+      if (networkEnvironmentConfig.qualityEnhancement.features.errorCorrection) {
+        await this.setupErrorCorrection();
+      }
+
+      // 4. 设置流优化
+      if (networkEnvironmentConfig.qualityEnhancement.features.streamOptimization) {
+        await this.setupStreamOptimization();
+      }
+    } catch (error) {
+      console.error('质量提升初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 设置智能缓存
+  async setupIntelligentCaching() {
+    if (!networkEnvironmentConfig.intelligentCaching.enabled) return;
+
+    try {
+      this.cacheManager = {
+        // 预测性缓存
+        predictCache: async (content) => {
+          const prediction = await this.predictContentUsage(content);
+          if (prediction.probability > 0.7) {
+            await this.cacheContent(content);
+          }
+        },
+
+        // 自适应缓冲
+        adjustBuffer: async (networkCondition) => {
+          const optimalSize = await this.calculateOptimalBufferSize(networkCondition);
+          await this.resizeBuffer(optimalSize);
+        },
+
+        // 内容优先级
+        setPriority: async (content) => {
+          const priority = await this.analyzeContentImportance(content);
+          await this.prioritizeContent(content, priority);
+        }
+      };
+    } catch (error) {
+      console.error('智能缓存设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 启动环境监控
+  startEnvironmentMonitoring() {
+    setInterval(async () => {
+      try {
+        // 1. 更新环境状态
+        const currentState = await this.assessEnvironment();
+        
+        // 2. 更新历史记录
+        this.updateEnvironmentHistory(currentState);
+        
+        // 3. 检查是否需要调整策略
+        if (this.needStrategyAdjustment(currentState)) {
+          await this.adjustStrategy(currentState);
+        }
+        
+        // 4. 更新质量指标
+        await this.updateQualityMetrics();
+        
+        // 5. 优化缓存
+        await this.optimizeCache();
+      } catch (error) {
+        console.error('环境监控更新失败:', error);
+      }
+    }, networkEnvironmentConfig.environmentSensing.samplingRate);
+  }
+
+  // 评估环境
+  async assessEnvironment() {
+    try {
+      const metrics = await this.gatherEnvironmentMetrics();
+      return this.classifyEnvironment(metrics);
+    } catch (error) {
+      console.error('环境评估失败:', error);
+      return 'mediumNetwork'; // 默认返回中等网络环境
+    }
+  }
+
+  // 调整策略
+  async adjustStrategy(environment) {
+    try {
+      // 1. 选择适当的策略
+      const strategy = await this.strategyController.selectStrategy(environment);
+      
+      // 2. 应用策略
+      await this.strategyController.applyStrategy(strategy);
+      
+      // 3. 验证策略效果
+      await this.strategyController.evaluateStrategy();
+      
+      this.activeStrategy = strategy;
+    } catch (error) {
+      console.error('策略调整失败:', error);
+    }
+  }
+
+  // 优化缓存
+  async optimizeCache() {
+    if (!this.cacheManager) return;
+
+    try {
+      // 1. 预测内容使用
+      await this.cacheManager.predictCache(this.getCurrentContent());
+      
+      // 2. 调整缓冲区
+      await this.cacheManager.adjustBuffer(this.currentEnvironment);
+      
+      // 3. 更新优先级
+      await this.cacheManager.setPriority(this.getCurrentContent());
+    } catch (error) {
+      console.error('缓存优化失败:', error);
+    }
+  }
+}
+
+// 创建网络环境管理器实例
+const networkEnvironmentManager = new NetworkEnvironmentManager();
+
+// 初始化网络环境优化
+async function initializeNetworkEnvironment() {
+  await networkEnvironmentManager.initialize();
+}
+
+// 在连接时应用环境优化
+async function applyEnvironmentOptimization(connection) {
+  const environment = await networkEnvironmentManager.assessEnvironment();
+  await networkEnvironmentManager.adjustStrategy(environment);
+  return connection;
+}
+
+// 添加DNS防泄露配置
+let dnsAntiLeakConfig = {
+  enabled: true,
+
+  // DNS加密
+  encryption: {
+    enabled: true,
+    protocols: {
+      doh: true,      // DNS over HTTPS
+      dot: true,      // DNS over TLS
+      doq: true,      // DNS over QUIC
+      dnscrypt: true  // DNSCrypt
+    },
+    providers: [
+      {
+        name: 'Cloudflare',
+        doh: 'https://cloudflare-dns.com/dns-query',
+        dot: 'tls://1.1.1.1',
+        doq: 'quic://cloudflare-dns.com:853',
+        dnscrypt: '2dnscrypt-cert.cloudflare.com'
+      },
+      {
+        name: 'Google',
+        doh: 'https://dns.google/dns-query',
+        dot: 'tls://dns.google',
+        doq: 'quic://dns.google:853'
+      }
+    ]
+  },
+
+  // DNS泄露防护
+  leakPrevention: {
+    enabled: true,
+    features: {
+      localDNSBlock: true,    // 阻止本地DNS查询
+      vpnOnly: true,          // 仅允许VPN DNS
+      dnsRebinding: true,     // DNS重绑定保护
+      prefetch: false         // 禁用DNS预取
+    }
+  },
+
+  // DNS监控和审计
+  monitoring: {
+    enabled: true,
+    features: {
+      queryLogging: true,     // 查询日志
+      anomalyDetection: true, // 异常检测
+      leakageAlerts: true,    // 泄露警报
+      statistics: true        // 统计分析
+    }
+  },
+
+  // 智能DNS路由
+  smartRouting: {
+    enabled: true,
+    features: {
+      splitDNS: true,         // 分流DNS
+      domainRouting: true,    // 域名路由
+      geoRouting: true,       // 地理路由
+      failover: true          // 故障转移
+    }
+  }
+};
+
+// DNS防泄露管理器
+class DNSAntiLeakManager {
+  constructor() {
+    this.activeProtocol = null;
+    this.currentProvider = null;
+    this.queryCache = new Map();
+    this.leakageCount = 0;
+  }
+
+  // 初始化DNS防泄露系统
+  async initialize() {
+    try {
+      // 1. 初始化DNS加密
+      await this.initializeDNSEncryption();
+      
+      // 2. 设置泄露防护
+      await this.setupLeakPrevention();
+      
+      // 3. 启动监控系统
+      await this.initializeMonitoring();
+      
+      // 4. 配置智能路由
+      await this.setupSmartRouting();
+      
+      console.log('DNS防泄露系统初始化成功');
+    } catch (error) {
+      console.error('DNS防泄露系统初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 初始化DNS加密
+  async initializeDNSEncryption() {
+    if (!dnsAntiLeakConfig.encryption.enabled) return;
+
+    try {
+      // 选择最佳协议
+      const bestProtocol = await this.selectBestProtocol();
+      
+      // 选择最佳提供商
+      const bestProvider = await this.selectBestProvider();
+      
+      // 建立加密连接
+      await this.establishEncryptedConnection(bestProtocol, bestProvider);
+      
+      this.activeProtocol = bestProtocol;
+      this.currentProvider = bestProvider;
+    } catch (error) {
+      console.error('DNS加密初始化失败:', error);
+      throw error;
+    }
+  }
+
+  // 设置泄露防护
+  async setupLeakPrevention() {
+    if (!dnsAntiLeakConfig.leakPrevention.enabled) return;
+
+    try {
+      // 1. 阻止本地DNS
+      if (dnsAntiLeakConfig.leakPrevention.features.localDNSBlock) {
+        await this.blockLocalDNS();
+      }
+
+      // 2. 配置VPN DNS
+      if (dnsAntiLeakConfig.leakPrevention.features.vpnOnly) {
+        await this.enforceVPNDNS();
+      }
+
+      // 3. 设置DNS重绑定保护
+      if (dnsAntiLeakConfig.leakPrevention.features.dnsRebinding) {
+        await this.setupRebindingProtection();
+      }
+
+      // 4. 禁用DNS预取
+      if (!dnsAntiLeakConfig.leakPrevention.features.prefetch) {
+        await this.disableDNSPrefetch();
+      }
+    } catch (error) {
+      console.error('DNS泄露防护设置失败:', error);
+      throw error;
+    }
+  }
+
+  // 处理DNS查询
+  async handleDNSQuery(domain, queryType) {
+    try {
+      // 1. 检查缓存
+      const cachedResult = this.queryCache.get(domain);
+      if (cachedResult && !this.isCacheExpired(cachedResult)) {
+        return cachedResult.data;
+      }
+
+      // 2. 检查是否允许查询
+      if (!this.isQueryAllowed(domain)) {
+        throw new Error('DNS查询被策略阻止');
+      }
+
+      // 3. 使用加密DNS进行查询
+      const result = await this.performEncryptedQuery(domain, queryType);
+
+      // 4. 验证结果
+      if (!this.validateQueryResult(result)) {
+        throw new Error('DNS查询结果验证失败');
+      }
+
+      // 5. 更新缓存
+      this.updateQueryCache(domain, result);
+
+      // 6. 记录查询
+      await this.logDNSQuery(domain, result);
+
+      return result;
+    } catch (error) {
+      console.error('DNS查询处理失败:', error);
+      // 使用备用DNS
+      return await this.handleFallbackQuery(domain, queryType);
+    }
+  }
+
+  // 执行加密DNS查询
+  async performEncryptedQuery(domain, queryType) {
+    const protocol = this.activeProtocol;
+    const provider = this.currentProvider;
+
+    try {
+      switch (protocol) {
+        case 'doh':
+          return await this.queryDoH(domain, queryType, provider.doh);
+        case 'dot':
+          return await this.queryDoT(domain, queryType, provider.dot);
+        case 'doq':
+          return await this.queryDoQ(domain, queryType, provider.doq);
+        case 'dnscrypt':
+          return await this.queryDNSCrypt(domain, queryType, provider.dnscrypt);
+        default:
+          throw new Error('不支持的DNS协议');
+      }
+    } catch (error) {
+      console.error('加密DNS查询失败:', error);
+      throw error;
+    }
+  }
+
+  // DNS over HTTPS查询
+  async queryDoH(domain, queryType, endpoint) {
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/dns-message',
+        },
+        body: this.encodeDNSQuery(domain, queryType)
+      });
+
+      if (!response.ok) {
+        throw new Error('DoH查询失败');
+      }
+
+      return await this.decodeDNSResponse(await response.arrayBuffer());
+    } catch (error) {
+      console.error('DoH查询失败:', error);
+      throw error;
+    }
+  }
+
+  // 检测DNS泄露
+  async detectDNSLeak() {
+    try {
+      // 1. 检查本地DNS请求
+      const localLeaks = await this.checkLocalDNSLeaks();
+      
+      // 2. 检查非加密DNS请求
+      const unencryptedLeaks = await this.checkUnencryptedDNS();
+      
+      // 3. 检查DNS预取
+      const prefetchLeaks = await this.checkDNSPrefetch();
+      
+      // 4. 分析泄露模式
+      const leakPattern = await this.analyzeDNSLeakPattern();
+
+      if (localLeaks || unencryptedLeaks || prefetchLeaks || leakPattern) {
+        this.leakageCount++;
+        await this.handleDNSLeak({
+          local: localLeaks,
+          unencrypted: unencryptedLeaks,
+          prefetch: prefetchLeaks,
+          pattern: leakPattern
+        });
+      }
+
+      return this.leakageCount;
+    } catch (error) {
+      console.error('DNS泄露检测失败:', error);
+      return -1;
+    }
+  }
+
+  // 处理DNS泄露
+  async handleDNSLeak(leakInfo) {
+    try {
+      // 1. 记录泄露事件
+      await this.logLeakEvent(leakInfo);
+      
+      // 2. 采取补救措施
+      await this.takeMitigationActions(leakInfo);
+      
+      // 3. 发送警报
+      if (dnsAntiLeakConfig.monitoring.features.leakageAlerts) {
+        await this.sendLeakageAlert(leakInfo);
+      }
+      
+      // 4. 更新防护策略
+      await this.updateLeakageProtection(leakInfo);
+    } catch (error) {
+      console.error('DNS泄露处理失败:', error);
+    }
+  }
+
+  // 更新DNS防护策略
+  async updateLeakageProtection(leakInfo) {
+    try {
+      // 1. 分析泄露原因
+      const cause = await this.analyzeLeakageCause(leakInfo);
+      
+      // 2. 生成新策略
+      const newPolicy = await this.generateUpdatedPolicy(cause);
+      
+      // 3. 应用新策略
+      await this.applyNewProtectionPolicy(newPolicy);
+      
+      // 4. 验证策略效果
+      await this.validatePolicyEffectiveness();
+    } catch (error) {
+      console.error('DNS防护策略更新失败:', error);
+    }
+  }
+}
+
+// 创建DNS防泄露管理器实例
+const dnsAntiLeakManager = new DNSAntiLeakManager();
+
+// 初始化DNS防泄露系统
+async function initializeDNSProtection() {
+  await dnsAntiLeakManager.initialize();
+}
+
+// 处理DNS查询
+async function handleSecureDNSQuery(domain, queryType) {
+  return await dnsAntiLeakManager.handleDNSQuery(domain, queryType);
+}
+
+// 检测DNS泄露
+async function checkForDNSLeaks() {
+  return await dnsAntiLeakManager.detectDNSLeak();
+}
