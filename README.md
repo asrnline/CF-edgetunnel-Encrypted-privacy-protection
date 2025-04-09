@@ -134,7 +134,7 @@ Telegram交流群：[@CMLiussss](https://t.me/CMLiussss)，**感谢[Alice Networ
 
 | 变量名 | 示例 | 必填 | 备注 | YT |
 |--------|---------|-|-----|-----|
-| UUID | `90cd4a77-141a-43c9-991b-08263cfe9c10` |✅| 可输入任意值(非UUIDv4标准的值会自动切换成动态UUID) | [Video](https://www.youtube.com/watch?v=s91zjpw3-P8&t=72s) |
+| UUID | `90cd4a77-141a-43c9-991b-08263cfe9c10` |✅| 可输入任意值(非UUIDv4标准的值会自动切换成动态UUID) | |
 | ENCRYPTION | `true` |✅| 是否启用加密|  |
 | ENCRYPTION_KEY | `加密算法: AES-256-GCM` |✅|加密主密钥 |  |
 | ENCRYPTION_ITERATIONS | `100000` |❌| PBKDF2迭代次数|  |
